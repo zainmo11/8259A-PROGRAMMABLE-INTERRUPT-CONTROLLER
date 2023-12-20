@@ -40,12 +40,15 @@ module BusControlTb();
         chip_select_n = 0;
         address = 0;
 
+        #5
+        write_enable_n = 1; 
+
         #10
         write_enable_n = 0; 
         data_bus_in = 8'b11101111;
-        // #10;
-        // write_enable_n = 0;
-        // #10;
+        #10
+        write_enable_n = 1;
+        #10 write_enable_n = 0;
     end
 
 endmodule

@@ -7,11 +7,11 @@ module Data_Bus_Control_8259 (
 
     // Internal Bus
     output  reg [7:0] internal_data_bus,
-    output  reg      write_initial_command_word_1,
-    output  reg      write_initial_command_word_2_4,
-    output  reg      write_operation_control_word_1,
-    output  reg      write_operation_control_word_2,
-    output  reg      write_operation_control_word_3,
+    output  wire      write_initial_command_word_1,
+    output  wire      write_initial_command_word_2_4,
+    output  wire      write_operation_control_word_1,
+    output  wire      write_operation_control_word_2,
+    output  wire      write_operation_control_word_3,
     output  reg      read,
     output  reg write_out
 );
@@ -39,14 +39,14 @@ module Data_Bus_Control_8259 (
     //     write_change <= ~write_change;
     // end
 
-    always @* begin
-        if (chip_select_n)
-            prev_write_enable_n <= 1'b1;
-        else begin
-            prev_write_enable_n <= write_enable_n;
-        end
-    end
-    assign write_flag = ~prev_write_enable_n & write_enable_n;
+    // always @* begin
+    //     if (chip_select_n)
+    //         prev_write_enable_n <= 1'b1;
+    //     else begin
+    //         prev_write_enable_n <= write_enable_n;
+    //     end
+    // end
+    // assign write_flag = ~prev_write_enable_n & write_enable_n;
 
     always @* begin
         stable_address <= address;
@@ -54,14 +54,21 @@ module Data_Bus_Control_8259 (
     // stable_address register can be removed because there is no clock
     // The command word flasg can be assigned to wires for less flip-flop usage 
 
-    // Generate write request flags
-    always @* begin
-            write_initial_command_word_1   <= ~write_enable_n & ~stable_address & internal_data_bus[4];
-            write_initial_command_word_2_4 <= ~write_enable_n & stable_address;
-            write_operation_control_word_1 <= write_flag & stable_address;
-            write_operation_control_word_2 <= write_flag & ~stable_address & ~internal_data_bus[4] & ~internal_data_bus[3];
-            write_operation_control_word_3 <= write_flag & ~stable_address & ~internal_data_bus[4] & internal_data_bus[3];
-    end
+    //Generate write request flags
+    // always @* begin
+    //         write_initial_command_word_1   <= write_enable_n & ~stable_address & internal_data_bus[4];
+    //         write_initial_command_word_2_4 <= write_enable_n & stable_address;
+    //         write_operation_control_word_1 <= write_flag & stable_address;
+    //         write_operation_control_word_2 <= write_flag & ~stable_address & ~internal_data_bus[4] & ~internal_data_bus[3];
+    //         write_operation_control_word_3 <= write_flag & ~stable_address & ~internal_data_bus[4] & internal_data_bus[3];
+    // end
+
+    assign write_initial_command_word_1   = write_enable_n & ~stable_address & internal_data_bus[4];
+    assign write_initial_command_word_2_4 = write_enable_n & stable_address;
+    assign write_operation_control_word_1 = write_flag & stable_address;
+    assign write_operation_control_word_2 = write_flag & ~stable_address & ~internal_data_bus[4] & ~internal_data_bus[3];
+    assign write_operation_control_word_3 = write_flag & ~stable_address & ~internal_data_bus[4] & internal_data_bus[3];
+    
 
     //
     // Read Control
