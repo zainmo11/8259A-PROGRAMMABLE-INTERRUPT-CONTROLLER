@@ -12,8 +12,7 @@ module Data_Bus_Control_8259 (
     output  wire      write_operation_control_word_1,
     output  wire      write_operation_control_word_2,
     output  wire      write_operation_control_word_3,
-    output  reg      read,
-    output  reg write_out
+    output  wire      read
 );
 
     //
@@ -65,17 +64,19 @@ module Data_Bus_Control_8259 (
 
     assign write_initial_command_word_1   = write_enable_n & ~stable_address & internal_data_bus[4];
     assign write_initial_command_word_2_4 = write_enable_n & stable_address;
-    assign write_operation_control_word_1 = write_flag & stable_address;
-    assign write_operation_control_word_2 = write_flag & ~stable_address & ~internal_data_bus[4] & ~internal_data_bus[3];
-    assign write_operation_control_word_3 = write_flag & ~stable_address & ~internal_data_bus[4] & internal_data_bus[3];
+    assign write_operation_control_word_1 = write_enable_n & stable_address;
+    assign write_operation_control_word_2 = write_enable_n & ~stable_address & ~internal_data_bus[4] & ~internal_data_bus[3];
+    assign write_operation_control_word_3 = write_enable_n & ~stable_address & ~internal_data_bus[4] & internal_data_bus[3];
     
 
     //
     // Read Control
     //
-    always @* begin
-        read <= ~read_enable_n  & ~chip_select_n;
-        write_out <= write_flag;
-    end
+    // always @* begin
+    //     read <= ~read_enable_n  & ~chip_select_n;
+    //     write_out <= write_flag;
+    // end
+
+    assign read = ~read_enable_n  & ~chip_select_n;
 
 endmodule

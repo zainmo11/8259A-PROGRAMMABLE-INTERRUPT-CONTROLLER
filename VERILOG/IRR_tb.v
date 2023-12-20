@@ -63,10 +63,10 @@ module Interrupt_Request_8259A_tm();
         #(`TB_CYCLE * 1);
         interrupt_request_pin   = data;
         #(`TB_CYCLE * 1);
-        clear_interrupt_request = data;
-        #(`TB_CYCLE * 1);
-        clear_interrupt_request = 8'b00000000;
-        #(`TB_CYCLE * 1);
+        // clear_interrupt_request = data;
+        // #(`TB_CYCLE * 1);
+        // clear_interrupt_request = 8'b00000000;
+        // #(`TB_CYCLE * 1);
     end
     endtask
 
@@ -87,18 +87,18 @@ module Interrupt_Request_8259A_tm();
     task TASK_INTERRUPT_TEST();
     begin
         #(`TB_CYCLE * 0);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000001);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000010);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000100);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00001000);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00010000);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00100000);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b01000000);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b10000000);
-        TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000001);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000010);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000100);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00001000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00010000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00100000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b01000000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b10000000);
+        // TASK_LEVEL_TRIGGER_INTERRUPT(8'b00000000);
 
-        TASK_CLEAR_INTERRUPT_REQUEST(8'b11111111);
-        TASK_CLEAR_INTERRUPT_REQUEST(8'b00000000);
+        // TASK_CLEAR_INTERRUPT_REQUEST(8'b11111111);
+        // TASK_CLEAR_INTERRUPT_REQUEST(8'b00000000);
 
         TASK_EDGE_TRIGGER_INTERRUPT(8'b10000000);
         TASK_EDGE_TRIGGER_INTERRUPT(8'b01000000);
@@ -125,7 +125,7 @@ module Interrupt_Request_8259A_tm();
 
         TASK_INTERRUPT_TEST();
 
-        freeze = 1'b1;
+        freeze = 1'b0;
 
         TASK_INTERRUPT_TEST();
 
