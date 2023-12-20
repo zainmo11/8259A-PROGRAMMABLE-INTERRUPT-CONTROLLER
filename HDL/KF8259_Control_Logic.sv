@@ -463,6 +463,7 @@ module KF8259_Control_Logic (
         else if (write_operation_control_word_2 == 1'b1) begin
             casez (internal_data_bus[7:5])
                 3'b101:  priority_rotate <= bit2num(highest_level_in_service);
+                // Least priority interrupt
                 3'b11?:  priority_rotate <= internal_data_bus[2:0];
                 default: priority_rotate <= priority_rotate;
             endcase
