@@ -3,11 +3,8 @@
 //
 // Written by Kitune-san
 //
-`include "KF8259_Common_Package.svh"
 
 module KF8259_In_Service (
-    input   logic           clock,
-    input   logic           reset,
 
     // Inputs
     input   logic   [2:0]   priority_rotate,
@@ -20,15 +17,17 @@ module KF8259_In_Service (
     output  logic   [7:0]   in_service_register,
     output  logic   [7:0]   highest_level_in_service
 );
-    import KF8259_Common_Package::rotate_right;
-    import KF8259_Common_Package::rotate_left;
-    import KF8259_Common_Package::resolv_priority;
-
+    
     //
     // In service register
     //
+    
     logic   [7:0]   next_in_service_register;
+    //Initial assignment
+    //initial begin
+    //end
 
+    //End of interrupt is which interrupt is finished or to be set to 0 if Non specific 
     assign next_in_service_register = (in_service_register & ~end_of_interrupt)
                                      | (latch_in_service == 1'b1 ? interrupt : 8'b00000000);
 

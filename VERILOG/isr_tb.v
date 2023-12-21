@@ -27,7 +27,7 @@ module KF8259_In_Service_tm();
     reg   [7:0]   in_service_register;
     reg   [7:0]   highest_level_in_service;
 
-    KF8259_In_Service 8259A_In_Service (.*);
+    In_Service_8259A In_Service_8259A (.*);
 
     //
     // Task : Initialization
@@ -58,7 +58,7 @@ module KF8259_In_Service_tm();
         start_in_service = 1'b0;
         #(`TB_CYCLE * 1);
     end
-    endtask;
+    endtask
 
     //
     // Task : End of interrupt
@@ -71,7 +71,7 @@ module KF8259_In_Service_tm();
         end_of_interrupt = 8'b00000000;
         #(`TB_CYCLE * 1);
     end
-    endtask;
+    endtask
 
     //
     // Task : Scan 1nterrupt
@@ -115,49 +115,41 @@ module KF8259_In_Service_tm();
     initial begin
         TASK_INIT();
 
-        $display("***** TEST ROTATE 7 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b111;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 6 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b110;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 5 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b101;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 4 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b100;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 3 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b011;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 2 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b010;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 1 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b001;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();
         TASK_SCAN_END_OF_INTERRUPT();
 
-        $display("***** TEST ROTATE 0 ***** at %d", tb_cycle_counter);
         priority_rotate = 3'b000;
         #(`TB_CYCLE * 1);
         TASK_SCAN_INTERRUPT();

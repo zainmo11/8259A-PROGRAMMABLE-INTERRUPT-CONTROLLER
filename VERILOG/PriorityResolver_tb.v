@@ -23,7 +23,7 @@ module Priority_Resolver_8259A_tm();
 
     reg   [7:0]   interrupt;
 
-    KF8259_Priority_Resolver u_KF8259_Priority_Resolver(.*);
+    Priority_Resolver_8259A Priority_Resolver_8259A(.*);
 
     //
     // Task : Initialization

@@ -88,6 +88,7 @@ module KF8259_Control_Logic (
     // State machine
     //always @*
     //CMD Ready means ready for interrupts
+    // ********************************************************** Initialization state machine *****************************************************
     always_comb begin
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
@@ -168,6 +169,7 @@ module KF8259_Control_Logic (
     wire    nedge_read_signal = prev_read_signal & ~read;
 
     // State machine
+    // ********************************************************** Interrupt acknowledge state machine *****************************************************
     always_comb begin
         casez (control_state)
             CTL_READY: begin
@@ -221,7 +223,8 @@ module KF8259_Control_Logic (
             control_state <= next_control_state;
     end
 
-    // Latch in service register signal
+    //**************************************************** Latch in service register signal ********************************************************
+    // Is an interrupt being serviced ?
     always_comb begin
         if (write_initial_command_word_1 == 1'b1)
             latch_in_service = 1'b0;
@@ -418,6 +421,7 @@ module KF8259_Control_Logic (
     // Operation control word 2
     //
     // End of interrupt
+    // End of interrupt is a priority number
     always_comb begin
         if (write_initial_command_word_1 == 1'b1)
             end_of_interrupt = 8'b11111111;
@@ -425,6 +429,7 @@ module KF8259_Control_Logic (
             end_of_interrupt = acknowledge_interrupt;
         else if (write_operation_control_word_2 == 1'b1) begin
             casez (internal_data_bus[6:5])
+                //End of interrupt is which interrupt is finished or to be set to 0 if Non specific 
                 2'b01:   end_of_interrupt = highest_level_in_service;
                 2'b11:   end_of_interrupt = num2bit(internal_data_bus[2:0]);
                 default: end_of_interrupt = 8'b00000000;

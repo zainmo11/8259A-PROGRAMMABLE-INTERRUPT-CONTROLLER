@@ -1,4 +1,4 @@
-module KF8259_Priority_Resolver (
+module Priority_Resolver_8259A (
     // Inputs from control logic
     input   wire   [2:0]   priority_rotate,
     input   wire   [7:0]   interrupt_mask,
