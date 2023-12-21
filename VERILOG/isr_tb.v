@@ -2,7 +2,7 @@
 `define TB_CYCLE        20
 `define TB_FINISH_COUNT 20000
 
-module KF8259_In_Service_tm();
+module In_Service_tm();
 
     // timeunit        1ns;
     // timeprecision   10ps;
@@ -19,9 +19,9 @@ module KF8259_In_Service_tm();
     //
     //
     reg   [2:0]   priority_rotate;
-
+    reg   [7:0]   interrupt_special_mask;
     reg   [7:0]   interrupt;
-    reg           start_in_service;
+    reg           latch_in_service;
     reg   [7:0]   end_of_interrupt;
 
     reg   [7:0]   in_service_register;
@@ -37,7 +37,7 @@ module KF8259_In_Service_tm();
         #(`TB_CYCLE * 0);
         priority_rotate  = 3'b111;
         interrupt        = 8'b00000000;
-        start_in_service = 1'b0;
+        latch_in_service = 1'b0;
         end_of_interrupt = 8'b00000000;
         #(`TB_CYCLE * 12);
     end
@@ -50,12 +50,12 @@ module KF8259_In_Service_tm();
     begin
         #(`TB_CYCLE * 0);
         interrupt        = in;
-        start_in_service = 1'b0;
+        latch_in_service = 1'b0;
         #(`TB_CYCLE * 1);
-        start_in_service = 1'b1;
+        latch_in_service = 1'b1;
         #(`TB_CYCLE * 1);
         interrupt        = 8'b00000000;
-        start_in_service = 1'b0;
+        latch_in_service = 1'b0;
         #(`TB_CYCLE * 1);
     end
     endtask
