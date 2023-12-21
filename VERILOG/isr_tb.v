@@ -39,6 +39,8 @@ module In_Service_tm();
         interrupt        = 8'b00000000;
         latch_in_service = 1'b0;
         end_of_interrupt = 8'b00000000;
+        interrupt_special_mask = 8'b00000000;
+        in_service_register = 8'b00000000;
         #(`TB_CYCLE * 12);
     end
     endtask
