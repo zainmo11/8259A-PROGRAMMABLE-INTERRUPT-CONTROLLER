@@ -15,6 +15,8 @@ module In_Service_8259A (
 
     wire   [7:0]   next_in_service_register;
 
+    initial in_service_register = 8'b00000000;
+
     assign next_in_service_register = (in_service_register & ~end_of_interrupt)
                                      | (latch_in_service == 1'b1 ? interrupt : 8'b00000000);
 

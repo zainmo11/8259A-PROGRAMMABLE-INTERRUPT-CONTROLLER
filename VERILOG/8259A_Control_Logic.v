@@ -2,8 +2,8 @@ module KF8259_Control_Logic (
     // External input/output
     inout   wire   [2:0]   cascade_inout,
 
-    input   wire           slave_program_n,
-    output  wire           slave_program_or_enable_buffer,
+    //input   wire           slave_program_n,
+    inout  wire           slave_program_or_enable_buffer,
 
     input   wire           interrupt_acknowledge_n,
     output  reg           interrupt_to_cpu,
@@ -60,6 +60,12 @@ module KF8259_Control_Logic (
     localparam ACK3 = 3'b011;
     localparam POLL = 3'b100;
 
+    // Cascade slave id
+    wire [2:0] cascade_id;
+    
+    assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
+    assign cascade_id = cascade_inout;
+
 
     // Registers
     reg   [10:0]  interrupt_vector_address;
@@ -87,14 +93,13 @@ module KF8259_Control_Logic (
     reg   [2:0]   cascade_out;
     wire           cascade_io;
 
-
     //
     // Write command state
     //
     reg command_state;
     reg next_command_state;
 
-    // State machine
+    // DONE - State machine
     always @* begin
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
@@ -148,72 +153,88 @@ module KF8259_Control_Logic (
     reg next_control_state;
     reg control_state;
 
-    // Detect ACK edge
-    reg   prev_interrupt_acknowledge_n;
-
-    always @* begin
-            prev_interrupt_acknowledge_n <= interrupt_acknowledge_n;            // <-------------------------
-    end
-
-    wire    nedge_interrupt_acknowledge =  prev_interrupt_acknowledge_n & ~interrupt_acknowledge_n;
-    wire    pedge_interrupt_acknowledge = ~prev_interrupt_acknowledge_n &  interrupt_acknowledge_n;
-
+    // always @(posedge interrupt_acknowledge_n) begin
+    //     prev_interrupt_acknowledge_n = interrupt_acknowledge_n;
+    //         // prev_interrupt_acknowledge_n <= interrupt_acknowledge_n;            // <-------------------------
+    // end
 
     // Detect read signal edge
     reg   prev_read_signal;
 
-    always @* begin
-        prev_read_signal <= read;                                  // <-------------------------
+    // always @* begin
+    //     prev_read_signal <= read;                                  // <-------------------------
+    // end
+
+    
+    always @(read) begin
+        if (~read)
+            read_pulse_latch <= 1'b1;
+        else
+            read_pulse_latch <= read_pulse_latch;                                  // <-------------------------
     end
 
-    wire    nedge_read_signal = prev_read_signal & ~read;
+    reg   prev_interrupt_acknowledge_n;
 
-    // State machine
-    always @* begin
+    wire ack_pulse_sense =  prev_interrupt_acknowledge_n & ~interrupt_acknowledge_n;
+    wire pedge_interrupt_acknowledge =  ~prev_interrupt_acknowledge_n & interrupt_acknowledge_n;
+
+    // State machine - Done hopefully
+    always @(interrupt_acknowledge_n) begin
         case (control_state)
             CTL_READY: begin
                 if ((write_operation_control_word_3_registers == 1'b1) && (internal_data_bus[2] == 1'b1))
                     next_control_state = POLL;
                 else if (write_operation_control_word_2_registers == 1'b1)
                     next_control_state = CTL_READY;
-                else if (nedge_interrupt_acknowledge == 1'b0)
+                else if (~ack_pulse_sense)  // ---> Sense for pulse
                     next_control_state = CTL_READY;
-                else
+                else begin
                     next_control_state = ACK1;
+                end
             end
             ACK1: begin
-                if (pedge_interrupt_acknowledge == 1'b0)
+                if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK1;
-                else
+                else begin
+    
                     next_control_state = ACK2;
+                end
             end
             ACK2: begin
-                if (pedge_interrupt_acknowledge == 1'b0)
+                if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK2;
-                else if (u8086_or_mcs80_config == 1'b0)
+                else if (u8086_or_mcs80_config == 1'b0) begin
                     next_control_state = ACK3;
-                else
+                end
+                else begin
                     next_control_state = CTL_READY;
+                end
             end
             ACK3: begin
-                if (pedge_interrupt_acknowledge == 1'b0)
+                if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK3;
-                else
+                else begin
+                    prev_interrupt_acknowledge_n = 0;
                     next_control_state = CTL_READY;
+                end
             end
             POLL: begin
                 if (nedge_read_signal == 1'b0)
                     next_control_state = POLL;
-                else
+                else begin
+                    read_pulse_latch <= 0;
                     next_control_state = CTL_READY;
+                end
             end
             default: begin
                 next_control_state = CTL_READY;
             end
         endcase
+
+        prev_interrupt_acknowledge_n <= interrupt_acknowledge_n;
     end
 
-    always @* begin
+    always @(next_control_state) begin
         if (write_initial_command_word_1 == 1'b1)
             control_state <= CTL_READY;
         else
@@ -221,7 +242,7 @@ module KF8259_Control_Logic (
     end
 
     // Latch in service register signal
-    always @* begin
+    always @(interrupt_acknowledge_n) begin
         if (write_initial_command_word_1 == 1'b1)
             latch_in_service = 1'b0;
         else if ((control_state == CTL_READY) && (next_control_state == POLL))
@@ -229,7 +250,8 @@ module KF8259_Control_Logic (
         else if (cascade_slave == 1'b0)
             latch_in_service = (control_state == CTL_READY) & (next_control_state != CTL_READY);
         else
-            latch_in_service = (control_state == ACK2) & (cascade_slave_enable == 1'b1) & (nedge_interrupt_acknowledge == 1'b1);
+            // latch_in_service = (control_state == ACK2) & (cascade_slave_enable == 1'b1) & (nedge_interrupt_acknowledge == 1'b1);
+            latch_in_service = (control_state == ACK2) & (cascade_slave_enable == 1'b1) & (ack_pulse_sense == 1'b1);
     end
 
     // End of acknowledge sequence
@@ -327,7 +349,11 @@ module KF8259_Control_Logic (
             buffered_mode_config <= buffered_mode_config;
     end
 
-    assign  slave_program_or_enable_buffer = ~buffered_mode_config;
+    //SP/EN IO
+    wire slave_program;
+
+    assign  slave_program_or_enable_buffer = buffered_mode_config ? ~buffered_mode_config : 1'bz;
+    assign slave_program = slave_program_or_enable_buffer;
 
     // M/S
     always @* begin
@@ -476,7 +502,7 @@ module KF8259_Control_Logic (
         if (single_or_cascade_config == 1'b1)
             cascade_slave = 1'b0;
         else if (buffered_mode_config == 1'b0)
-            cascade_slave = ~slave_program_n;
+            cascade_slave = ~slave_program;
         else
             cascade_slave = ~buffered_master_or_slave_config;
     end
@@ -490,7 +516,7 @@ module KF8259_Control_Logic (
     always @* begin
         if (cascade_slave == 1'b0)
             cascade_slave_enable = 1'b0;
-        else if (cascade_device_config[2:0] != cascade_inout)
+        else if (cascade_device_config[2:0] != cascade_id)
             cascade_slave_enable = 1'b0;
         else
             cascade_slave_enable = 1'b1;
@@ -524,10 +550,6 @@ module KF8259_Control_Logic (
         else
             cascade_out <= bit2num(acknowledge_interrupt);
     end
-
-
-assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
-
     //
     // Interrupt control signals
     //
@@ -590,7 +612,8 @@ assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
     end
 
     // control_logic_data
-    always @* begin
+    // Testing tomorrow
+    always @(interrupt_acknowledge_n) begin
         if (interrupt_acknowledge_n == 1'b0) begin
             // Acknowledge
             case (control_state)
