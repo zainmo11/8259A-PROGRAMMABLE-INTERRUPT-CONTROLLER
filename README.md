@@ -32,9 +32,8 @@ The Example Code module includes sample code that demonstrates how to use the 82
 To get started with this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/your-username/8259A-Programmable-Interrupt-Controller.git`
 
-
 ## License
 This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
-If you have any questions or suggestions, feel free to reach out to us at [email@example.com](mailto:email@example.com).
+If you have any questions or suggestions, feel free to reach out to us at [zyn6681@gmail.com](mailto:email@example.com).
