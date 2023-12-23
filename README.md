@@ -67,19 +67,19 @@ These features make the 8259A a versatile and widely used component in interrupt
 
 ### **Control Logic**
 
-     - **Acknowledge Module**
-     - **Cascade Signals**
-     - **Initialization Command Word 4**
-     - **Initialization Command Word 1**
-     - **Interrupt Control Signals**
-     - **Operation Control Word 1**
-     - **Operation Control Word 2**
-     - **Operation Control Word 3**
+   - **Acknowledge Module**
+   - **Cascade Signals**
+   - **Initialization Command Word 4**
+   - **Initialization Command Word 1**
+   - **Interrupt Control Signals**
+   - **Operation Control Word 1**
+   - **Operation Control Word 2**
+   - **Operation Control Word 3**
      
 ### **Data Bus Control/Buffer**
 
-     - **Data Bus Buffer**
-     - **Data Bus Control**
+   - **Data Bus Buffer**
+   - **Data Bus Control**
      
 ### **In Service Register**
 
@@ -87,7 +87,7 @@ These features make the 8259A a versatile and widely used component in interrupt
 
 ### **Priority Resolver**
 
-     - Priority Mask Module
+   - Priority Mask Module
 
 ### **Internal Functions File**
    
