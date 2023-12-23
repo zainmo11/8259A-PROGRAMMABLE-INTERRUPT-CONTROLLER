@@ -1,39 +1,102 @@
+# 8259A Programmable Interrupt Controller (PIC) in Verilog
 
-# 8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER
+## Overview
 
-## Introduction
-Welcome to the 8259A Programmable Interrupt Controller project! This project aims to provide a comprehensive implementation of the 8259A PIC, a vital component in computer systems for managing interrupts. 
+This Verilog implementation represents the 8259A Programmable Interrupt Controller (PIC) commonly used in microprocessor-based systems. The design is organized into several main modules, each encapsulating specific functionality, along with their respective internal modules and testbenches.
 
-## Features
-- **Interrupt Handling**: The 8259A PIC allows efficient handling of interrupts, ensuring smooth execution of your software.
-- **Programmable Configuration**: Customize the PIC's behavior by programming its various registers to suit your specific requirements.
-- **Cascade Mode**: Take advantage of the PIC's cascade mode to expand the number of interrupt lines available.
-- **Interrupt Prioritization**: Prioritize interrupts based on their importance to ensure critical tasks are handled first.
-- **Masking and Unmasking**: Easily enable or disable interrupts by masking or unmasking specific interrupt lines.
-- **Interrupt Request (IRQ) Management**: Manage IRQs effectively, allowing devices to request attention from the CPU when needed.
-- **Compatibility**: The 8259A PIC is widely supported and compatible with various computer architectures.
 
-## Modules
-This project consists of the following modules:
+## Supported Features of the 8259A Programmable Interrupt Controller (PIC)
 
-### 8259A Driver
-The 8259A Driver module provides an interface to interact with the 8259A PIC. It includes functions for configuring registers, handling interrupts, and managing IRQs. This module serves as the backbone of the project, allowing seamless communication with the PIC.
+1. **Eight Priority Levels:**
+   - The 8259A supports up to eight levels of interrupt priority, allowing for efficient handling of different interrupt sources.
 
-### Interrupt Handler
-The Interrupt Handler module implements the logic for handling interrupts and dispatching them to the appropriate interrupt service routines (ISRs). It ensures that interrupts are processed efficiently and that the appropriate actions are taken based on the interrupt source.
+2. **Cascadable:**
+   - Multiple 8259A controllers can be cascaded to expand the number of interrupt levels, allowing for more interrupt sources in the system.
 
-### IRQ Manager
-The IRQ Manager module is responsible for managing the allocation and deallocation of IRQs. It ensures that each device is assigned a unique interrupt line and handles conflicts that may arise when multiple devices request the same IRQ.
+3. **Programmable Interrupt Modes:**
+   - The PIC supports different interrupt modes, including edge-triggered and level-triggered modes, providing flexibility in interrupt handling.
 
-### Example Code
-The Example Code module includes sample code that demonstrates how to use the 8259A PIC in your own projects. It provides practical examples and serves as a starting point for integrating the PIC into your software.
+4. **Auto EOI (End of Interrupt):**
+   - The 8259A supports automatic End of Interrupt operation, simplifying the handling of interrupts by automatically sending the EOI signal to the interrupt controller.
 
-## Getting Started
-To get started with this project, follow these steps:
-1. Clone the repository: `git clone https://github.com/your-username/8259A-Programmable-Interrupt-Controller.git`
+5. **Special Fully Nested Mode:**
+   - Special Fully Nested Mode (SFNM) is supported, ensuring that lower priority interrupts are not serviced until higher priority interrupts have been acknowledged.
 
-## License
-This project is licensed under the [MIT License](LICENSE).
+6. **Buffered Mode:**
+   - The PIC can operate in buffered mode, allowing it to temporarily store interrupt requests and release them in a prioritized manner.
 
-## Contact
-If you have any questions or suggestions, feel free to reach out to us at [zyn6681@gmail.com](mailto:email@example.com).
+7. **Interrupt Request Register (IRR) and In-Service Register (ISR):**
+   - The 8259A maintains an Interrupt Request Register (IRR) to keep track of pending interrupt requests and an In-Service Register (ISR) to track interrupts that are currently being serviced.
+
+8. **Priority Resolver:**
+   - The PIC includes a priority resolver to determine the highest priority interrupt pending in the system.
+
+9. **Interrupt Masking:**
+   - Each interrupt level can be individually masked, allowing the system to disable specific interrupt sources when needed.
+
+10. **Cascade Operation:**
+    - The 8259A supports cascading, enabling the connection of multiple PICs to handle a larger number of interrupt sources in complex systems.
+
+11. **Readable Control Registers:**
+    - The control registers of the 8259A, including the Interrupt Request Register (IRR) and In-Service Register (ISR), can be read to obtain information about the status of interrupts.
+
+12. **Initialization Commands:**
+    - The 8259A can be initialized through a sequence of Initialization Command Words (ICWs) to configure its operating mode, interrupt modes, and other settings.
+
+13. **Fully Static Operation:**
+    - The 8259A operates in a fully static mode, meaning it can be stopped and started without losing its configuration or interrupt state.
+
+14. **Interrupt Acknowledge Signals:**
+    - The PIC generates interrupt acknowledge signals (INTA) for the CPU to identify the source of the interrupt being serviced.
+
+15. **Daisy-Chaining:**
+    - The cascading feature allows multiple 8259A controllers to be connected in a daisy-chain configuration, simplifying the organization of interrupt priorities in large systems.
+
+These features make the 8259A a versatile and widely used component in interrupt handling within computer systems.
+
+## Structure
+
+### **Top Module**
+   - The top module integrates the following five main modules:
+     -**Control Logic**
+     -**Data Bus Control/Buffer**
+     -**In Service Register**
+     -**Interrupt Request Register**
+     -**Priority Resolver**
+
+
+### **Control Logic**
+
+     - **Acknowledge Module**
+     - **Cascade Signals**
+     - **Initialization Command Word 4**
+     - **Initialization Command Word 1**
+     - **Interrupt Control Signals**
+     - **Operation Control Word 1**
+     - **Operation Control Word 2**
+     - **Operation Control Word 3**
+     
+### **Data Bus Control/Buffer**
+
+     - **Data Bus Buffer**
+     - **Data Bus Control**
+     
+### **In Service Register**
+
+### **Interrupt Request Register**
+
+### **Priority Resolver**
+
+     - Priority Mask Module
+
+### **Internal Functions File**
+   
+  - `Rotate Right`: Performs a right rotation on the input source by the specified number of positions.
+  - `Rotate Left`: Performs a left rotation on the input source by the specified number of positions.
+  - `Resolve Priority`: Resolves the priority of the input request by converting it to an 8-bit priority value.
+  - `num2bit`: Converts a 3-bit number to an 8-bit binary representation.
+  - `bit2num`: Converts an 8-bit binary representation to a 3-bit number.
+
+## Testbenches
+
+- Each module includes a testbench to verify its functionality and integration within the system. The testbenches ensure that the implemented modules operate correctly in different scenarios and configurations.
