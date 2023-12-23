@@ -17,6 +17,9 @@ module KF8259_Control_Logic (
     input   wire           write_operation_control_word_3,
 
     input   wire           read,
+    input   wire           write,
+
+
     output  reg           out_control_logic_data,
     output  reg   [7:0]   control_logic_data,
 
@@ -59,6 +62,7 @@ module KF8259_Control_Logic (
     localparam ACK2 = 3'b010;
     localparam ACK3 = 3'b011;
     localparam POLL = 3'b100;
+    localparam FINISH_CYCLE = 3'b101; 
 
     // Cascade slave id
     wire [2:0] cascade_id;
@@ -100,7 +104,7 @@ module KF8259_Control_Logic (
     reg next_command_state;
 
     // DONE - State machine
-    always @* begin
+    always @(write) begin
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
         else if (write_initial_command_word_2_4 == 1'b1) begin
@@ -127,14 +131,14 @@ module KF8259_Control_Logic (
                 end
             endcase
         end
-        else
-            next_command_state = command_state;
+
+        command_state = next_command_state;
     end
 
 
-    always @* begin
-        command_state <= next_command_state;
-    end
+    // always @* begin
+    //     command_state <= next_command_state;
+    // end
 
     // assign command_state = next_command_state;    // <----------- 
 
@@ -159,24 +163,27 @@ module KF8259_Control_Logic (
     // end
 
     // Detect read signal edge
-    reg   prev_read_signal;
+    //reg   prev_read_signal;
 
     // always @* begin
     //     prev_read_signal <= read;                                  // <-------------------------
     // end
 
     
-    always @(read) begin
-        if (~read)
-            read_pulse_latch <= 1'b1;
-        else
-            read_pulse_latch <= read_pulse_latch;                                  // <-------------------------
-    end
+    // always @(read) begin
+    //     if (~read)
+    //         read_pulse_latch <= 1'b1;
+    //     else
+    //         read_pulse_latch <= read_pulse_latch;                                  // <-------------------------
+    // end
 
-    reg   prev_interrupt_acknowledge_n;
+    reg prev_interrupt_acknowledge_n;
+    reg prev_read_signal;  
 
     wire ack_pulse_sense =  prev_interrupt_acknowledge_n & ~interrupt_acknowledge_n;
     wire pedge_interrupt_acknowledge =  ~prev_interrupt_acknowledge_n & interrupt_acknowledge_n;
+
+    wire read_pos_edge = ~prev_read_signal & read;
 
     // State machine - Done hopefully
     always @(interrupt_acknowledge_n) begin
@@ -207,24 +214,26 @@ module KF8259_Control_Logic (
                     next_control_state = ACK3;
                 end
                 else begin
-                    next_control_state = CTL_READY;
+                    next_control_state = FINISH_CYCLE;
                 end
             end
             ACK3: begin
                 if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK3;
                 else begin
-                    prev_interrupt_acknowledge_n = 0;
-                    next_control_state = CTL_READY;
+                    next_control_state = FINISH_CYCLE;
                 end
             end
             POLL: begin
-                if (nedge_read_signal == 1'b0)
+                if (~read_pos_edge)
                     next_control_state = POLL;
                 else begin
-                    read_pulse_latch <= 0;
+                    //read_pulse_latch <= 0;
                     next_control_state = CTL_READY;
                 end
+            end
+            FINISH_CYCLE: begin
+                next_control_state = CTL_READY;
             end
             default: begin
                 next_control_state = CTL_READY;
@@ -232,6 +241,7 @@ module KF8259_Control_Logic (
         endcase
 
         prev_interrupt_acknowledge_n <= interrupt_acknowledge_n;
+        prev_read_signal <= read;
     end
 
     always @(next_control_state) begin
