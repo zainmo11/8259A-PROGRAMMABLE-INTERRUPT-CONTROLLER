@@ -87,7 +87,7 @@ These features make the 8259A a versatile and widely used component in interrupt
 
 ### **Priority Resolver**
 
-   - Priority Mask Module
+   - **Priority Mask Module**
 
 ### **Internal Functions File**
    
