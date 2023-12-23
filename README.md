@@ -88,13 +88,13 @@ These features make the 8259A a versatile and widely used component in interrupt
      
 ### **3. In Service Register**
 
-### **3. Interrupt Request Register**
+### **4. Interrupt Request Register**
 
-### **4. Priority Resolver**
+### **5. Priority Resolver**
 
    - **Priority Mask Module**
 
-### **5. Internal Functions File**
+### **Internal Functions File**
    
   - `Rotate Right`: Performs a right rotation on the input source by the specified number of positions.
   - `Rotate Left`: Performs a left rotation on the input source by the specified number of positions.
