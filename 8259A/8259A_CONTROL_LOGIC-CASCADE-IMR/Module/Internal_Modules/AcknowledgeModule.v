@@ -24,11 +24,18 @@ module AcknowledgeModule(
     input [2:0] interrupt_when_ack1,
     input [2:0] acknowledge_interrupt,
     input call_address_interval_4_or_8_config,
-    input [2:0] interrupt_vector_address,
+    input [10:0] interrupt_vector_address,
     input read,
     output reg out_control_logic_data,
     output reg [7:0] control_logic_data
 );
+
+// Define parameters for control states
+    localparam CTL_READY = 3'b000;
+    localparam ACK1 = 3'b001;
+    localparam ACK2 = 3'b010;
+    localparam ACK3 = 3'b011;
+    localparam POLL = 3'b100;
 
     always @(interrupt_acknowledge_n) begin
         if (interrupt_acknowledge_n == 1'b0) begin

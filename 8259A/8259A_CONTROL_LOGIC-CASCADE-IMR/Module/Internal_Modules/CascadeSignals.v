@@ -38,6 +38,11 @@ module CascadeSignals(
     output reg cascade_output_ack_2_3, // Output signal indicating the output ACK2 and ACK3.
     output reg [2:0] cascade_out // Output signal indicating the slave ID.
 );
+// Define parameters for control states
+    localparam ACK1 = 3'b001;
+    localparam ACK2 = 3'b010;
+    localparam ACK3 = 3'b011;
+
 
     // Select master/slave
     always @* begin
