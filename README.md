@@ -58,14 +58,19 @@ These features make the 8259A a versatile and widely used component in interrupt
 
 ### **Top Module**
    - The top module integrates the following five main modules:
+     
      -**Control Logic**
+
      -**Data Bus Control/Buffer**
+
      -**In Service Register**
+
      -**Interrupt Request Register**
+
      -**Priority Resolver**
 
 
-### **Control Logic**
+### **1. Control Logic**
 
    - **Acknowledge Module**
    - **Cascade Signals**
@@ -76,20 +81,20 @@ These features make the 8259A a versatile and widely used component in interrupt
    - **Operation Control Word 2**
    - **Operation Control Word 3**
      
-### **Data Bus Control/Buffer**
+### **2. Data Bus Control/Buffer**
 
    - **Data Bus Buffer**
    - **Data Bus Control**
      
-### **In Service Register**
+### **3. In Service Register**
 
-### **Interrupt Request Register**
+### **3. Interrupt Request Register**
 
-### **Priority Resolver**
+### **4. Priority Resolver**
 
    - **Priority Mask Module**
 
-### **Internal Functions File**
+### **5. Internal Functions File**
    
   - `Rotate Right`: Performs a right rotation on the input source by the specified number of positions.
   - `Rotate Left`: Performs a left rotation on the input source by the specified number of positions.
