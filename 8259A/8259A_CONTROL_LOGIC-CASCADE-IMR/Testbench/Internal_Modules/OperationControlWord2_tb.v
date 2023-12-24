@@ -7,8 +7,6 @@ module OCW2_tb ();
     reg write_operation_control_word_2; // Input signal to write the operation control word 2.
     reg [7:0] internal_data_bus; // Input bus for internal data.
     reg [7:0] highest_level_in_service; // Input signal representing the highest level in service.
-    reg [2:0] num2bit; // Input signal representing the number to bit conversion.
-    reg [7:0] bit2num; // Input signal representing the bit to number conversion.
     
     // outputs
     reg [7:0] end_of_interrupt; // Output signal representing the end of interrupt.
@@ -27,8 +25,6 @@ module OCW2_tb ();
         write_operation_control_word_2 = 0;
         internal_data_bus = 0;
         highest_level_in_service = 0;
-        num2bit = 0;
-        bit2num = 0;
 
         end_of_interrupt = 8'bx;
         auto_rotate_mode = 1'bx;
@@ -62,7 +58,6 @@ module OCW2_tb ();
     begin
         auto_eoi_config = 0;
         internal_data_bus = 8'b01100000;
-        num2bit = 3'b110;
         write_operation_control_word_2 = 1;
 
         #100
@@ -87,7 +82,6 @@ module OCW2_tb ();
         auto_eoi_config = 0;
         internal_data_bus = 8'b10100000;
         highest_level_in_service = 8'b00010000;
-        bit2num = 8'b00000010;
         write_operation_control_word_2 = 1;
 
         #100
