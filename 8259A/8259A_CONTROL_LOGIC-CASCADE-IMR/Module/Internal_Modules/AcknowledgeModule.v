@@ -92,7 +92,7 @@ module AcknowledgeModule(
                                 control_logic_data = {interrupt_vector_address[2:0], control_logic_data[2:0], 2'b00}; // Control logic data for 8-byte call address interval
                         end
                         else begin
-                            control_logic_data = {interrupt_vector_address[10:6], control_logic_data[2:0]}; // Control logic data for MCS-80 configuration
+                            control_logic_data = {interrupt_vector_address[10:6], control_logic_data[2:0]}; // Control logic data for 8086 configuration
                         end
                     end
                     else begin

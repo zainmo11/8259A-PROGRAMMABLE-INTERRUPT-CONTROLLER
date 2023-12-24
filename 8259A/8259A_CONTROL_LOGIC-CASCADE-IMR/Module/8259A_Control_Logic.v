@@ -13,10 +13,8 @@
  */
 
 `include "CascadeSignals.v"
-`include "AcknowledgeModule.v"
 `include "initializationCommandWord4.v"
 `include "InitializationCommandWordModule1.v"
-`include "Internal_Functions.v"
 `include "InterruptControlSignals.v"
 `include "OperationControlWord1.v"
 `include "OperationControlWord2.v"
@@ -26,6 +24,7 @@ module Control_Logic_8259 (
     // External input/output
     inout wire [2:0] cascade_inout,
     inout wire slave_program_or_enable_buffer,
+
     input wire interrupt_acknowledge_n,
     output reg interrupt_to_cpu,
 
@@ -64,6 +63,7 @@ module Control_Logic_8259 (
     output reg [7:0] clear_interrupt_request
 );
 
+    `include "AcknowledgeModule.v"
 
     // State
     // Define parameters for command states
@@ -251,6 +251,8 @@ module Control_Logic_8259 (
     //
     // Initialization command word 1
     //
+
+
      InitializationCommandWordModule initializationCommandWordInstance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .internal_data_bus(internal_data_bus),
@@ -260,6 +262,8 @@ module Control_Logic_8259 (
         .single_or_cascade_config(single_or_cascade_config),
         .set_icw4_config(set_icw4_config)
     );
+
+    interrupt_vector_address = 
 
     //
     // Initialization command word 2
@@ -297,6 +301,7 @@ module Control_Logic_8259 (
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_initial_command_word_4(write_initial_command_word_4),
         .internal_data_bus(internal_data_bus),
+        .slave_program_or_enable_buffer(slave_program_or_enable_buffer),
         .special_fully_nest_config(special_fully_nest_config),
         .buffered_mode_config(buffered_mode_config),
         .slave_program(slave_program),
@@ -332,7 +337,7 @@ module Control_Logic_8259 (
         .highest_level_in_service(highest_level_in_service),
         .end_of_interrupt(end_of_interrupt),
         .auto_rotate_mode(auto_rotate_mode),
-        .priority_rotate(priority_rotate),
+        .priority_rotate(priority_rotate)
     );
 
     //

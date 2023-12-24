@@ -25,6 +25,9 @@ module InitializationCommandWord4(
     input write_initial_command_word_1, // Input signal to write the initial command word 1.
     input write_initial_command_word_4, // Input signal to write the initial command word 4.
     input [7:0] internal_data_bus, // Internal data bus providing configuration bits.
+
+    inout slave_program_or_enable_buffer,
+
     output reg special_fully_nest_config, // Output signal for the special fully nested mode configuration.
     output reg buffered_mode_config, // Output signal for the buffered mode configuration.
     output wire slave_program, // Output signal for the slave program configuration.
@@ -52,7 +55,6 @@ module InitializationCommandWord4(
     end
 
     // SP/EN IO: Slave Program or Enable Buffer
-    wire slave_program_or_enable_buffer;
 
     assign  slave_program_or_enable_buffer = buffered_mode_config ? ~buffered_mode_config : 1'bz;
     assign slave_program = slave_program_or_enable_buffer;

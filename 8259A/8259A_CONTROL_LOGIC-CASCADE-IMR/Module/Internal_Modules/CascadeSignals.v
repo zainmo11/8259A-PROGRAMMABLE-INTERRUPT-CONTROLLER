@@ -27,7 +27,7 @@ module CascadeSignals(
     input buffered_mode_config, // Input signal indicating whether the device operates in buffered mode.
     input slave_program, // Input signal indicating whether the device is a slave.
     input buffered_master_or_slave_config, // Input signal indicating the buffered master or slave configuration.
-    input [2:0] cascade_device_config, // Input signal indicating the cascade device configuration.
+    input [7:0] cascade_device_config, // Input signal indicating the cascade device configuration.
     input [2:0] cascade_id, // Input signal indicating the cascade ID.
     input acknowledge_interrupt, // Input signal indicating an interrupt acknowledgement.
     input control_state, // Input signal indicating the control state.
@@ -47,8 +47,16 @@ module CascadeSignals(
     // Select master/slave
     always @* begin
         if (single_or_cascade_config == 1'b1)
+            /*
+            single_or_cascade_config = 1, Single Mode
+            single_or_cascade_config = 0, Cascade Mode
+            */
             cascade_slave = 1'b0; // Device operates in single mode
         else if (buffered_mode_config == 1'b0)
+            /*
+            buffered_mode_config = 0, Non buffered mode, SP pin decides master or slave
+            buffered_mode_config = 1, Master or slave decision in ICW4
+            */
             cascade_slave = ~slave_program; // Device operates in cascade mode, select master or slave based on slave_program
         else
             cascade_slave = ~buffered_master_or_slave_config; // Device operates in cascade mode, select master or slave based on buffered_master_or_slave_config
@@ -72,12 +80,18 @@ module CascadeSignals(
 
     // Output ACK2 and ACK3
     always @* begin
+        // Single Mode
         if (single_or_cascade_config == 1'b1)
             cascade_output_ack_2_3 = 1'b1; // Output ACK2 and ACK3
+        // You are slave in cascade mode
         else if (cascade_slave_enable == 1'b1)
             cascade_output_ack_2_3 = 1'b1; // Output ACK2 and ACK3
+
+        // Master and there is no interrupt from slave
         else if ((cascade_slave == 1'b0) && (interrupt_from_slave_device == 1'b0))
             cascade_output_ack_2_3 = 1'b1; // Output ACK2 and ACK3
+        
+        // Master and have an interrupt from slave
         else
             cascade_output_ack_2_3 = 1'b0;
     end
@@ -85,11 +99,11 @@ module CascadeSignals(
     // Output slave ID
     always @* begin
         if (cascade_slave == 1'b1)
-            cascade_out <= 3'b000; // Slave ID is 000
+            cascade_out <= 3'bz; // Slave ID is 000
         else if ((control_state != ACK1) && (control_state != ACK2) && (control_state != ACK3))
-            cascade_out <= 3'b000; // Slave ID is 000
+            cascade_out <= 3'bz; // Slave ID is 000
         else if (interrupt_from_slave_device == 1'b0)
-            cascade_out <= 3'b000; // Slave ID is 000
+            cascade_out <= 3'bz; // Slave ID is 000
         else
             cascade_out <= bit2num(acknowledge_interrupt); // Convert acknowledge_interrupt to binary and assign as slave ID
     end

@@ -29,8 +29,9 @@ module OperationControlWord2(
     input [7:0] highest_level_in_service, // Input signal representing the highest level in service.
     output reg [7:0] end_of_interrupt, // Output signal representing the end of interrupt.
     output reg auto_rotate_mode, // Output signal indicating the auto rotate mode.
-    output reg [2:0] priority_rotate, // Output signal representing the priority rotate value.
+    output reg [2:0] priority_rotate // Output signal representing the priority rotate value.
 );
+    `include "Internal_Functions.v"
 
     // End of interrupt
     always @* begin
@@ -40,8 +41,8 @@ module OperationControlWord2(
             end_of_interrupt = acknowledge_interrupt; // Set end_of_interrupt to acknowledge_interrupt if auto_eoi_config and end_of_acknowledge_sequence are high.
         else if (write_operation_control_word_2 == 1'b1) begin
             casez (internal_data_bus[6:5])
-                2'b01:   end_of_interrupt = highest_level_in_service; // Set end_of_interrupt to highest_level_in_service if internal_data_bus[6:5] is 2'b01.
-                2'b11:   end_of_interrupt = num2bit(internal_data_bus[2:0]); // Set end_of_interrupt to num2bit if internal_data_bus[6:5] is 2'b11.
+                2'b01:   end_of_interrupt = highest_level_in_service; // Rotate on non specific EOI
+                2'b11:   end_of_interrupt = num2bit(internal_data_bus[2:0]); // Specific EOI
                 default: end_of_interrupt = 8'b00000000; // Set end_of_interrupt to all zeros for other cases.
             endcase
         end
@@ -73,7 +74,7 @@ module OperationControlWord2(
         else if (write_operation_control_word_2 == 1'b1) begin
             casez (internal_data_bus[7:5])
                 3'b101:  priority_rotate <= bit2num(highest_level_in_service); // Set priority_rotate to bit2num if internal_data_bus[7:5] is 3'b101.
-                3'b11?:  priority_rotate <= internal_data_bus[2:0]; // Set priority_rotate to internal_data_bus[2:0] for 3'b11? cases.
+                3'b11?:  priority_rotate <= internal_data_bus[2:0]; // Set specific priority
                 default: priority_rotate <= priority_rotate; // Keep priority_rotate unchanged for other cases.
             endcase
         end
