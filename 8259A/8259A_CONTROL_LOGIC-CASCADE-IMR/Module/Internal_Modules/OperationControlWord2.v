@@ -27,11 +27,9 @@ module OperationControlWord2(
     input write_operation_control_word_2, // Input signal to write the operation control word 2.
     input [7:0] internal_data_bus, // Input bus for internal data.
     input [7:0] highest_level_in_service, // Input signal representing the highest level in service.
-    input [2:0] num2bit, // Input signal representing the number to bit conversion.
     output reg [7:0] end_of_interrupt, // Output signal representing the end of interrupt.
     output reg auto_rotate_mode, // Output signal indicating the auto rotate mode.
     output reg [2:0] priority_rotate, // Output signal representing the priority rotate value.
-    input [7:0] bit2num // Input signal representing the bit to number conversion.
 );
 
     // End of interrupt
@@ -41,9 +39,9 @@ module OperationControlWord2(
         else if ((auto_eoi_config == 1'b1) && (end_of_acknowledge_sequence == 1'b1))
             end_of_interrupt = acknowledge_interrupt; // Set end_of_interrupt to acknowledge_interrupt if auto_eoi_config and end_of_acknowledge_sequence are high.
         else if (write_operation_control_word_2 == 1'b1) begin
-            case (internal_data_bus[6:5])
+            casez (internal_data_bus[6:5])
                 2'b01:   end_of_interrupt = highest_level_in_service; // Set end_of_interrupt to highest_level_in_service if internal_data_bus[6:5] is 2'b01.
-                2'b11:   end_of_interrupt = num2bit; // Set end_of_interrupt to num2bit if internal_data_bus[6:5] is 2'b11.
+                2'b11:   end_of_interrupt = num2bit(internal_data_bus[2:0]); // Set end_of_interrupt to num2bit if internal_data_bus[6:5] is 2'b11.
                 default: end_of_interrupt = 8'b00000000; // Set end_of_interrupt to all zeros for other cases.
             endcase
         end
@@ -56,7 +54,7 @@ module OperationControlWord2(
         if (write_initial_command_word_1 == 1'b1)
             auto_rotate_mode <= 1'b0; // Set auto_rotate_mode to 0 if write_initial_command_word_1 is high.
         else if (write_operation_control_word_2 == 1'b1) begin
-            case (internal_data_bus[7:5])
+            casez (internal_data_bus[7:5])
                 3'b000:  auto_rotate_mode <= 1'b0; // Set auto_rotate_mode to 0 if internal_data_bus[7:5] is 3'b000.
                 3'b100:  auto_rotate_mode <= 1'b1; // Set auto_rotate_mode to 1 if internal_data_bus[7:5] is 3'b100.
                 default: auto_rotate_mode <= auto_rotate_mode; // Keep auto_rotate_mode unchanged for other cases.
@@ -71,10 +69,10 @@ module OperationControlWord2(
         if (write_initial_command_word_1 == 1'b1)
             priority_rotate <= 3'b111; // Set priority_rotate to 3'b111 if write_initial_command_word_1 is high.
         else if ((auto_rotate_mode == 1'b1) && (end_of_acknowledge_sequence == 1'b1))
-            priority_rotate <= bit2num; // Set priority_rotate to bit2num if auto_rotate_mode and end_of_acknowledge_sequence are high.
+            priority_rotate <= bit2num(acknowledge_interrupt); // Set priority_rotate to bit2num if auto_rotate_mode and end_of_acknowledge_sequence are high.
         else if (write_operation_control_word_2 == 1'b1) begin
-            case (internal_data_bus[7:5])
-                3'b101:  priority_rotate <= bit2num; // Set priority_rotate to bit2num if internal_data_bus[7:5] is 3'b101.
+            casez (internal_data_bus[7:5])
+                3'b101:  priority_rotate <= bit2num(highest_level_in_service); // Set priority_rotate to bit2num if internal_data_bus[7:5] is 3'b101.
                 3'b11?:  priority_rotate <= internal_data_bus[2:0]; // Set priority_rotate to internal_data_bus[2:0] for 3'b11? cases.
                 default: priority_rotate <= priority_rotate; // Keep priority_rotate unchanged for other cases.
             endcase

@@ -343,11 +343,9 @@ module KF8259_Control_Logic (
         .write_operation_control_word_2(write_operation_control_word_2),
         .internal_data_bus(internal_data_bus),
         .highest_level_in_service(highest_level_in_service),
-        .num2bit(num2bit),
         .end_of_interrupt(end_of_interrupt),
         .auto_rotate_mode(auto_rotate_mode),
         .priority_rotate(priority_rotate),
-        .bit2num(bit2num)
     );
 
     //
