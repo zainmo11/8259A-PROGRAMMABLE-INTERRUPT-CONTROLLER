@@ -29,7 +29,7 @@ module InterruptControlSignals(
     output reg [7:0] acknowledge_interrupt, // Output signal representing the interrupt request lines to be acknowledged.
     output reg [7:0] interrupt_when_ack1 // Output signal representing the interrupt request lines when in ACK1 state.
 );
-// Define parameters for control states
+    // Define parameters for control states
     localparam CTL_READY = 3'b000;
     localparam ACK1 = 3'b001;
 

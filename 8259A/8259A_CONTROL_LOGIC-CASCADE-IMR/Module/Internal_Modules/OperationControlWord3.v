@@ -23,13 +23,13 @@ module OperationControlWord3(
     // ESMM / SMM
     always @* begin
         if (write_initial_command_word_1 == 1'b1) begin
-            special_mask_mode        <= 1'b0; // Set special mask mode to 0 when writing initial command word 1.
+            special_mask_mode <= 1'b0; // Set special mask mode to 0 when writing initial command word 1.
         end
         else if ((write_operation_control_word_3_registers == 1'b1) && (internal_data_bus[6] == 1'b1)) begin
-            special_mask_mode        <= internal_data_bus[5]; // Set special mask mode based on internal data bus when writing operation control word 3 registers.
+            special_mask_mode <= internal_data_bus[5]; // Set special mask mode based on internal data bus when writing operation control word 3 registers.
         end
         else begin
-            special_mask_mode        <= special_mask_mode; // Maintain current special mask mode.
+            special_mask_mode <= special_mask_mode; // Maintain current special mask mode.
         end
     end
 

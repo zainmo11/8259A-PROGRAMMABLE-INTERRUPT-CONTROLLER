@@ -1,51 +1,67 @@
+/**
+ * @file 8259A_Control_Logic.v
+ * @brief This module implements the control logic for the 8259A Programmable Interrupt Controller (PIC).
+ *
+ * The Control_Logic_8259 module handles the initialization and operation of the PIC. It interfaces with other modules
+ * such as CascadeSignals, AcknowledgeModule, InitializationCommandWordModule, Internal_Functions, InterruptControlSignals,
+ * OperationControlWord1, OperationControlWord2, and OperationControlWord3.
+ *
+ * The module has various input and output ports for external communication, internal bus, registers, interrupt detection
+ * logics, and interrupt control signals. It includes state machines to handle command states and control states. It also
+ * implements the necessary logic for writing registers and command signals, as well as handling the acknowledge sequence
+ * and initialization command words.
+ */
 
 `include "CascadeSignals.v"
+`include "AcknowledgeModule.v"
+`include "initializationCommandWord4.v"
+`include "InitializationCommandWordModule1.v"
+`include "Internal_Functions.v"
+`include "InterruptControlSignals.v"
+`include "OperationControlWord1.v"
+`include "OperationControlWord2.v"
+`include "OperationControlWord3.v"
 
-module KF8259_Control_Logic (
+module Control_Logic_8259 (
     // External input/output
-    inout   wire   [2:0]   cascade_inout,
-
-    //input   wire           slave_program_n,
-    inout  wire           slave_program_or_enable_buffer,
-
-    input   wire           interrupt_acknowledge_n,
-    output  reg           interrupt_to_cpu,
+    inout wire [2:0] cascade_inout,
+    inout wire slave_program_or_enable_buffer,
+    input wire interrupt_acknowledge_n,
+    output reg interrupt_to_cpu,
 
     // Internal bus
-    input   wire   [7:0]   internal_data_bus,
-    input   wire           write_initial_command_word_1,
-    input   wire           write_initial_command_word_2_4,
-    input   wire           write_operation_control_word_1,
-    input   wire           write_operation_control_word_2,
-    input   wire           write_operation_control_word_3,
+    input wire [7:0] internal_data_bus,
+    input wire write_initial_command_word_1,
+    input wire write_initial_command_word_2_4,
+    input wire write_operation_control_word_1,
+    input wire write_operation_control_word_2,
+    input wire write_operation_control_word_3,
+    input wire read,
+    input wire write,
 
-    input   wire           read,
-    input   wire           write,
-
-
-    output  reg           out_control_logic_data,
-    output  reg   [7:0]   control_logic_data,
+    output reg out_control_logic_data,
+    output reg [7:0] control_logic_data,
 
     // Registers to interrupt detecting logics
-    output  reg           level_or_edge_toriggered_config,
-    output  reg           special_fully_nest_config,
+    output reg level_or_edge_toriggered_config,
+    output reg special_fully_nest_config,
 
     // Registers to Read logics
-    output  reg           enable_read_register,
-    output  reg           read_register_isr_or_irr,
+    output reg enable_read_register,
+    output reg read_register_isr_or_irr,
 
     // Signals from interrupt detectiong logics
-    input   wire   [7:0]   interrupt,
-    input   wire   [7:0]   highest_level_in_service,
+    input wire [7:0] interrupt,
+    input wire [7:0] highest_level_in_service,
 
     // Interrupt control signals
-    output  reg   [7:0]   interrupt_mask,
-    output  reg   [7:0]   interrupt_special_mask,
-    output  reg   [7:0]   end_of_interrupt,
-    output  reg   [2:0]   priority_rotate,
-    output  reg           freeze,
-    output  reg           latch_in_service,
-    output  reg   [7:0]   clear_interrupt_request
+    output reg [7:0] interrupt_mask,
+    output reg [7:0] interrupt_special_mask,
+    output reg [7:0] end_of_interrupt,
+    output reg [2:0] priority_rotate,
+    output reg freeze,
+    output reg latch_in_service,
+    output reg [7:0] clear_interrupt_request
 );
 
 
@@ -96,13 +112,11 @@ module KF8259_Control_Logic (
     reg           cascade_slave_enable;
     reg           cascade_output_ack_2_3;
 
-    //
-    // Write command state
-    //
+    // Command state machine
     reg command_state;
     reg next_command_state;
 
-    // DONE - State machine
+    // Update command state based on write signals
     always @(write) begin
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
@@ -135,13 +149,6 @@ module KF8259_Control_Logic (
     end
 
 
-    // always @* begin
-    //     command_state <= next_command_state;
-    // end
-
-    // assign command_state = next_command_state;    // <----------- 
-
-
     // Writing registers/command signals
     wire    write_initial_command_word_2 = (command_state == WRITE_ICW2) & write_initial_command_word_2_4;
     wire    write_initial_command_word_3 = (command_state == WRITE_ICW3) & write_initial_command_word_2_4;
@@ -150,41 +157,19 @@ module KF8259_Control_Logic (
     wire    write_operation_control_word_2_registers = (command_state == CMD_READY) & write_operation_control_word_2;
     wire    write_operation_control_word_3_registers = (command_state == CMD_READY) & write_operation_control_word_3;
 
-    //
-    // Service control state
-    //
-    reg next_control_state;
-    reg control_state;
+    // Control state variables
+    reg next_control_state; // Next state of the control state machine
+    reg control_state; // Current state of the control state machine
 
-    // always @(posedge interrupt_acknowledge_n) begin
-    //     prev_interrupt_acknowledge_n = interrupt_acknowledge_n;
-    //         // prev_interrupt_acknowledge_n <= interrupt_acknowledge_n;            // <-------------------------
-    // end
+    reg prev_interrupt_acknowledge_n; // Previous value of the interrupt_acknowledge_n signal
+    reg prev_read_signal; // Previous value of the read signal
 
-    // Detect read signal edge
-    //reg   prev_read_signal;
+    wire ack_pulse_sense = prev_interrupt_acknowledge_n & ~interrupt_acknowledge_n; // Signal indicating the sense of an acknowledge pulse
+    wire pedge_interrupt_acknowledge = ~prev_interrupt_acknowledge_n & interrupt_acknowledge_n; // Signal indicating the positive edge of the interrupt_acknowledge_n signal
 
-    // always @* begin
-    //     prev_read_signal <= read;                                  // <-------------------------
-    // end
+    wire read_pos_edge = ~prev_read_signal & read; // Signal indicating the positive edge of the read signal
 
-    
-    // always @(read) begin
-    //     if (~read)
-    //         read_pulse_latch <= 1'b1;
-    //     else
-    //         read_pulse_latch <= read_pulse_latch;                                  // <-------------------------
-    // end
-
-    reg prev_interrupt_acknowledge_n;
-    reg prev_read_signal;  
-
-    wire ack_pulse_sense =  prev_interrupt_acknowledge_n & ~interrupt_acknowledge_n;
-    wire pedge_interrupt_acknowledge =  ~prev_interrupt_acknowledge_n & interrupt_acknowledge_n;
-
-    wire read_pos_edge = ~prev_read_signal & read;
-
-    // State machine - Done hopefully
+    // Control state machine
     always @(interrupt_acknowledge_n) begin
         case (control_state)
             CTL_READY: begin
@@ -192,7 +177,7 @@ module KF8259_Control_Logic (
                     next_control_state = POLL;
                 else if (write_operation_control_word_2_registers == 1'b1)
                     next_control_state = CTL_READY;
-                else if (~ack_pulse_sense)  // ---> Sense for pulse
+                else if (~ack_pulse_sense)  // Sense for pulse
                     next_control_state = CTL_READY;
                 else begin
                     next_control_state = ACK1;
@@ -202,7 +187,6 @@ module KF8259_Control_Logic (
                 if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK1;
                 else begin
-    
                     next_control_state = ACK2;
                 end
             end
@@ -227,7 +211,6 @@ module KF8259_Control_Logic (
                 if (~read_pos_edge)
                     next_control_state = POLL;
                 else begin
-                    //read_pulse_latch <= 0;
                     next_control_state = CTL_READY;
                 end
             end
@@ -259,10 +242,8 @@ module KF8259_Control_Logic (
         else if (cascade_slave == 1'b0)
             latch_in_service = (control_state == CTL_READY) & (next_control_state != CTL_READY);
         else
-            // latch_in_service = (control_state == ACK2) & (cascade_slave_enable == 1'b1) & (nedge_interrupt_acknowledge == 1'b1);
             latch_in_service = (control_state == ACK2) & (cascade_slave_enable == 1'b1) & (ack_pulse_sense == 1'b1);
     end
-
     // End of acknowledge sequence
     wire    end_of_acknowledge_sequence =  (control_state != POLL) & (control_state != CTL_READY) & (next_control_state == CTL_READY);
     wire    end_of_poll_command         =  (control_state == POLL) & (control_state != CTL_READY) & (next_control_state == CTL_READY);
@@ -279,9 +260,11 @@ module KF8259_Control_Logic (
         .single_or_cascade_config(single_or_cascade_config),
         .set_icw4_config(set_icw4_config)
     );
+
     //
     // Initialization command word 2
     //
+
     // A15-A8 (MCS-80) or T7-T3 (8086, 8088)
     always @* begin
         if (write_initial_command_word_1 == 1'b1)
@@ -295,6 +278,7 @@ module KF8259_Control_Logic (
     //
     // Initialization command word 3
     //
+
     // S7-S0 (MASTER) or ID2-ID0 (SLAVE)
     always @* begin
         if (write_initial_command_word_1 == 1'b1)
@@ -308,6 +292,7 @@ module KF8259_Control_Logic (
     //
     // Initialization command word 4
     //
+
      InitializationCommandWord4 initializationCommandWord4Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_initial_command_word_4(write_initial_command_word_4),
@@ -323,6 +308,7 @@ module KF8259_Control_Logic (
     //
     // Operation control word 1
     //
+
     OperationControlWord1 operationControlWord1Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_operation_control_word_1_registers(write_operation_control_word_1_registers),
@@ -335,6 +321,7 @@ module KF8259_Control_Logic (
     //
     // Operation control word 2
     //
+
     OperationControlWord2 operationControlWord2Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .auto_eoi_config(auto_eoi_config),
@@ -351,6 +338,7 @@ module KF8259_Control_Logic (
     //
     // Operation control word 3
     //
+
       OperationControlWord3 operationControlWord3Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_operation_control_word_3_registers(write_operation_control_word_3_registers),
@@ -363,6 +351,7 @@ module KF8259_Control_Logic (
     //
     // Cascade signals
     //
+
         CascadeSignals cascadeSignalsInstance(
         .single_or_cascade_config(single_or_cascade_config),
         .buffered_mode_config(buffered_mode_config),
@@ -383,6 +372,7 @@ module KF8259_Control_Logic (
     //
     // Interrupt control signals
     //
+
     InterruptControlSignals interruptControlSignalsInstance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .interrupt(interrupt),
@@ -400,6 +390,7 @@ module KF8259_Control_Logic (
 
 
     // control_logic_data
+
     AcknowledgeModule acknowledgeModuleInstance(
         .interrupt_acknowledge_n(interrupt_acknowledge_n),
         .cascade_slave(cascade_slave),
