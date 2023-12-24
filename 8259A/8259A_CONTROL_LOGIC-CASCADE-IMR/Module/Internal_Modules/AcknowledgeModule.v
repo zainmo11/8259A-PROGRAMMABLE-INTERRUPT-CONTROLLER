@@ -21,14 +21,17 @@ module AcknowledgeModule(
     input u8086_or_mcs80_config,
     input [2:0] control_state,
     input cascade_output_ack_2_3,
-    input [2:0] interrupt_when_ack1,
-    input [2:0] acknowledge_interrupt,
+    input [7:0] interrupt_when_ack1,
+    input [7:0] acknowledge_interrupt,
     input call_address_interval_4_or_8_config,
     input [10:0] interrupt_vector_address,
     input read,
     output reg out_control_logic_data,
     output reg [7:0] control_logic_data
 );
+
+
+`include "Internal_Functions.v"
 
 // Define parameters for control states
     localparam CTL_READY = 3'b000;
@@ -49,12 +52,12 @@ module AcknowledgeModule(
                         end
                         else begin
                             out_control_logic_data = 1'b0;
-                            control_logic_data     = 8'b00000000; // Control logic data for MCS-80 configuration
+                            control_logic_data     = 8'bz; // Control logic data for MCS-80 configuration
                         end
                     end
                     else begin
                         out_control_logic_data = 1'b0;
-                        control_logic_data     = 8'b00000000; // Control logic data for cascade slave
+                        control_logic_data     = 8'bz; // Control logic data for cascade slave
                     end
                 end
                 ACK1: begin
@@ -65,12 +68,12 @@ module AcknowledgeModule(
                         end
                         else begin
                             out_control_logic_data = 1'b0;
-                            control_logic_data     = 8'b00000000; // Control logic data for MCS-80 configuration
+                            control_logic_data     = 8'bz; // Control logic data for MCS-80 configuration
                         end
                     end
                     else begin
                         out_control_logic_data = 1'b0;
-                        control_logic_data     = 8'b00000000; // Control logic data for cascade slave
+                        control_logic_data     = 8'bz; // Control logic data for cascade slave
                     end
                 end
                 ACK2: begin
@@ -94,7 +97,7 @@ module AcknowledgeModule(
                     end
                     else begin
                         out_control_logic_data = 1'b0;
-                        control_logic_data     = 8'b00000000; // Control logic data when cascade_output_ack_2_3 is not active
+                        control_logic_data     = 8'bz; // Control logic data when cascade_output_ack_2_3 is not active
                     end
                 end
                 ACK3: begin
@@ -104,12 +107,12 @@ module AcknowledgeModule(
                     end
                     else begin
                         out_control_logic_data = 1'b0;
-                        control_logic_data     = 8'b00000000; // Control logic data when cascade_output_ack_2_3 is not active
+                        control_logic_data     = 8'bz; // Control logic data when cascade_output_ack_2_3 is not active
                     end
                 end
                 default: begin
                     out_control_logic_data = 1'b0;
-                    control_logic_data     = 8'b00000000; // Control logic data for default state
+                    control_logic_data     = 8'bz; // Control logic data for default state
                 end
             endcase
         end
@@ -117,7 +120,7 @@ module AcknowledgeModule(
             // Poll command
             out_control_logic_data = 1'b1;
             if (acknowledge_interrupt == 8'b00000000)
-                control_logic_data = 8'b000000000; // Control logic data when acknowledge_interrupt is 0
+                control_logic_data = 8'bz; // Control logic data when acknowledge_interrupt is 0
             else begin
                 control_logic_data[7:3] = 5'b10000; // Control logic data for non-zero acknowledge_interrupt
                 control_logic_data[2:0] = bit2num(acknowledge_interrupt);
@@ -126,7 +129,7 @@ module AcknowledgeModule(
         else begin
             // Nothing
             out_control_logic_data = 1'b0;
-            control_logic_data     = 8'b00000000; // Control logic data when no conditions are met
+            control_logic_data     = 8'bz; // Control logic data when no conditions are met
         end
     end
 endmodule

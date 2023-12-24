@@ -1,3 +1,6 @@
+
+`include "CascadeSignals.v"
+
 module KF8259_Control_Logic (
     // External input/output
     inout   wire   [2:0]   cascade_inout,
@@ -46,9 +49,6 @@ module KF8259_Control_Logic (
 );
 
 
-    `include "Internal_Modules/*.v"
-
-
     // State
     // Define parameters for command states
     localparam CMD_READY = 2'b00;
@@ -64,8 +64,14 @@ module KF8259_Control_Logic (
     localparam POLL = 3'b100;
     localparam FINISH_CYCLE = 3'b101; 
 
+    //
+    // Cascade
+    //
+    reg   [2:0]   cascade_out;
+
     // Cascade slave id
     wire [2:0] cascade_id;
+    wire cascade_io;
     
     assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
     assign cascade_id = cascade_inout;
@@ -89,13 +95,6 @@ module KF8259_Control_Logic (
     reg           cascade_slave;
     reg           cascade_slave_enable;
     reg           cascade_output_ack_2_3;
-
-
-    //
-    // Cascade
-    //
-    reg   [2:0]   cascade_out;
-    wire           cascade_io;
 
     //
     // Write command state
@@ -275,7 +274,7 @@ module KF8259_Control_Logic (
         .write_initial_command_word_1(write_initial_command_word_1),
         .internal_data_bus(internal_data_bus),
         .interrupt_vector_address(interrupt_vector_address),
-        .level_or_edge_toriggered_config(level_or_edge_toriggered_config),
+        .level_or_edge_triggered_config(level_or_edge_toriggered_config),
         .call_address_interval_4_or_8_config(call_address_interval_4_or_8_config),
         .single_or_cascade_config(single_or_cascade_config),
         .set_icw4_config(set_icw4_config)
