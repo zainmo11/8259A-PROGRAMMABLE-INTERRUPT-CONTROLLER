@@ -153,8 +153,8 @@ wire nedge_write = prev_write & ~write;
     wire    write_operation_control_word_3_registers = (command_state == CMD_READY) & write_operation_control_word_3;
 
     // Control state variables
-    reg next_control_state; // Next state of the control state machine
-    reg control_state; // Current state of the control state machine
+    reg [2:0] next_control_state; // Next state of the control state machine
+    reg [2:0] control_state; // Current state of the control state machine
 
     reg prev_interrupt_acknowledge_n; // Previous value of the interrupt_acknowledge_n signal
     reg prev_read_signal; // Previous value of the read signal
