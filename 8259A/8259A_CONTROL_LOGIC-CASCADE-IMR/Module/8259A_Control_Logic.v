@@ -13,10 +13,8 @@
  */
 
 `include "CascadeSignals.v"
-`include "AcknowledgeModule.v"
 `include "initializationCommandWord4.v"
 `include "InitializationCommandWordModule1.v"
-`include "Internal_Functions.v"
 `include "InterruptControlSignals.v"
 `include "OperationControlWord1.v"
 `include "OperationControlWord2.v"
@@ -26,6 +24,7 @@ module Control_Logic_8259 (
     // External input/output
     inout wire [2:0] cascade_inout,
     inout wire slave_program_or_enable_buffer,
+
     input wire interrupt_acknowledge_n,
     output reg interrupt_to_cpu,
 
@@ -64,6 +63,7 @@ module Control_Logic_8259 (
     output reg [7:0] clear_interrupt_request
 );
 
+    `include "AcknowledgeModule.v"
 
     // State
     // Define parameters for command states
@@ -122,10 +122,17 @@ module Control_Logic_8259 (
 
     wire nedge_write = prev_write & ~write;
 
-    // Update command state based on write signals
+    reg prev_write;
+
+    initial command_state = 0;
+
+    wire nedge_write = prev_write & ~write;
+
+    // DONE - State machine
     always @(write) begin
-         if (nedge_write)
+        if (nedge_write)
             command_state = next_command_state;
+
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
         else if (write_initial_command_word_2_4 == 1'b1) begin
@@ -154,6 +161,7 @@ module Control_Logic_8259 (
         end
 
         prev_write = write;
+
     end
 
 
@@ -270,6 +278,8 @@ module Control_Logic_8259 (
         .set_icw4_config(set_icw4_config)
     );
 
+    interrupt_vector_address = 
+
     //
     // Initialization command word 2
     //
@@ -341,7 +351,7 @@ module Control_Logic_8259 (
         .highest_level_in_service(highest_level_in_service),
         .end_of_interrupt(end_of_interrupt),
         .auto_rotate_mode(auto_rotate_mode),
-        .priority_rotate(priority_rotate),
+        .priority_rotate(priority_rotate)
     );
 
     //

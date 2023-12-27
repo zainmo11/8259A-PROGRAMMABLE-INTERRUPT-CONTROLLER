@@ -52,7 +52,6 @@ module InitializationCommandWord4(
     end
 
     // SP/EN IO: Slave Program or Enable Buffer
-    wire slave_program_or_enable_buffer;
 
     assign  slave_program_or_enable_buffer = buffered_mode_config ? ~buffered_mode_config : 1'bz;
     assign slave_program = slave_program_or_enable_buffer;

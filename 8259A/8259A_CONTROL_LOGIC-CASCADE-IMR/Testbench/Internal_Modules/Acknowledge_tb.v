@@ -19,72 +19,80 @@ module Acknowledge_tb ();
 
     task TASK_INIT();
     begin
-        interrupt_acknowledge_n = 0;
+        interrupt_acknowledge_n = 1;
         cascade_slave = 0;
         u8086_or_mcs80_config = 0;
-        control_state = 2'b00;
+        control_state = 3'b000;
         cascade_output_ack_2_3 = 0;
-        interrupt_when_ack1 = 8'b00000001;
-        acknowledge_interrupt = 8'b00000001;
+        interrupt_when_ack1 = 8'b00000000;
+        acknowledge_interrupt = 8'b00000000;
         call_address_interval_4_or_8_config = 0;
-        interrupt_vector_address = 10'b0000000000;
+        interrupt_vector_address = 11'b00000000000;
         read = 0;
     end
     endtask
 
-    task TASK_WRITE_ACK1();
+    task TASK_WRITE_MCS80();
     begin
-        interrupt_acknowledge_n = 1;
-        cascade_slave = 0;
-        u8086_or_mcs80_config = 0;
-        control_state = 2'b01;
-        cascade_output_ack_2_3 = 1;
-        interrupt_when_ack1 = 8'b00000010;
-        acknowledge_interrupt = 8'b00000010;
-        call_address_interval_4_or_8_config = 0;
-        interrupt_vector_address = 10'b0000000000;
-        read = 0;
-    end
-    endtask
-
-    task TASK_WRITE_ACK2();
-    begin
+        // ACK1
         interrupt_acknowledge_n = 0;
-        cascade_slave = 0;
-        u8086_or_mcs80_config = 0;
-        control_state = 2'b10;
+        u8086_or_mcs80_config = 1;
+        control_state = 3'b001;
         cascade_output_ack_2_3 = 1;
-        interrupt_when_ack1 = 8'b00000011;
-        acknowledge_interrupt = 8'b00000011;
-        call_address_interval_4_or_8_config = 1;
-        interrupt_vector_address = 10'b0000000010;
-        read = 1;
+
+        #100
+        interrupt_acknowledge_n = 1;
+        
+        // ACK2
+        #100 
+        interrupt_acknowledge_n = 0;
+        control_state = 3'b010;
+        acknowledge_interrupt = 8'b00000010;
+        interrupt_vector_address = 11'b10101010101;
+
+        #100
+        interrupt_acknowledge_n = 1;
+
+        // ACK3
+        #100
+        interrupt_acknowledge_n = 0;
+        control_state = 3'b011;
+
+        #100
+        interrupt_acknowledge_n = 1;
     end
     endtask
 
-    task TASK_WRITE_ACK3();
+    task TASK_WRITE_U8086();
     begin
-        interrupt_acknowledge_n = 1;
-        cascade_slave = 1;
-        u8086_or_mcs80_config = 1;
-        control_state = 2'b11;
+        // ACK1
+        interrupt_acknowledge_n = 0;
+        u8086_or_mcs80_config = 0;
+        control_state = 3'b001;
         cascade_output_ack_2_3 = 1;
-        interrupt_when_ack1 = 8'b00000111;
-        acknowledge_interrupt = 8'b00000111;
-        call_address_interval_4_or_8_config = 1;
-        interrupt_vector_address = 10'b0000000000;
-        read = 0;
+
+        #100
+        interrupt_acknowledge_n = 1;
+        
+        // ACK2
+        #100 
+        interrupt_acknowledge_n = 0;
+        control_state = 3'b010;
+        call_address_interval_4_or_8_config = 0;
+        acknowledge_interrupt = 8'b00000010;
+        interrupt_vector_address = 11'b10101010101;
+
+        #100
+        interrupt_acknowledge_n = 1;
     end
     endtask
 
     initial begin
         TASK_INIT();
         #100
-        TASK_WRITE_ACK1();
+        TASK_WRITE_MCS80();
         #100
-        TASK_WRITE_ACK2();
-        #100
-        TASK_WRITE_ACK3();
+        TASK_WRITE_U8086();
     end
     
 

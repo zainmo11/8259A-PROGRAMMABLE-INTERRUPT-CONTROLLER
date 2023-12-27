@@ -15,7 +15,7 @@
 module InitializationCommandWord1(
     input write_initial_command_word_1,
     input [7:0] internal_data_bus,
-    output reg [2:0] interrupt_vector_address,
+    output reg [10:0] interrupt_vector_address,
     output reg level_or_edge_triggered_config,
     output reg call_address_interval_4_or_8_config,
     output reg single_or_cascade_config,
