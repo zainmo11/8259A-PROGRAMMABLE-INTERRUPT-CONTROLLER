@@ -12,7 +12,7 @@
  * When the write signal is low (1'b0), the module keeps the configuration signals unchanged.
  */
 
-module InitializationCommandWordModule1(
+module InitializationCommandWord1(
     input write_initial_command_word_1,
     input [7:0] internal_data_bus,
     output reg [2:0] interrupt_vector_address,

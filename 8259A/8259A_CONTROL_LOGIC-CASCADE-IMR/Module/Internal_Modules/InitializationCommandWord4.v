@@ -24,7 +24,7 @@
 module InitializationCommandWord4(
     input write_initial_command_word_1, // Input signal to write the initial command word 1.
     input write_initial_command_word_4, // Input signal to write the initial command word 4.
-    input [7:0] internal_data_bus, // Internal data bus providing configuration bits.
+    input [4:0] internal_data_bus, // Internal data bus providing configuration bits.
     output reg special_fully_nest_config, // Output signal for the special fully nested mode configuration.
     output reg buffered_mode_config, // Output signal for the buffered mode configuration.
     output wire slave_program, // Output signal for the slave program configuration.

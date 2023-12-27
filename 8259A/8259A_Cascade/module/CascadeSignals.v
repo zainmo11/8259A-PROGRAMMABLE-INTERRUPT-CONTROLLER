@@ -27,14 +27,13 @@ module CascadeSignals(
     input buffered_mode_config, // Input signal indicating whether the device operates in buffered mode.
     input slave_program, // Input signal indicating whether the device is a slave.
     input buffered_master_or_slave_config, // Input signal indicating the buffered master or slave configuration.
-    input [2:0] cascade_device_config, // Input signal indicating the cascade device configuration.
+    input [7:0] cascade_device_config, // Input signal indicating the cascade device configuration.
     input [2:0] cascade_id, // Input signal indicating the cascade ID.
     input acknowledge_interrupt, // Input signal indicating an interrupt acknowledgement.
     input control_state, // Input signal indicating the control state.
     output reg cascade_slave, // Output signal indicating whether the device is a cascade slave.
     output wire cascade_io, // Output signal indicating the cascade port I/O.
     output reg cascade_slave_enable, // Output signal indicating whether the cascade slave is enabled.
-    output wire interrupt_from_slave_device, // Output signal indicating an interrupt from the slave device.
     output reg cascade_output_ack_2_3, // Output signal indicating the output ACK2 and ACK3.
     output reg [2:0] cascade_out // Output signal indicating the slave ID.
 );
