@@ -113,11 +113,19 @@ module Control_Logic_8259 (
     reg           cascade_output_ack_2_3;
     reg [7:0] interrupt_when_ack1;
     // Command state machine
-    reg command_state;
-    reg next_command_state;
+    reg [1:0] command_state;
+    reg [1:0] next_command_state;
+
+    reg prev_write;
+
+    initial command_state = 0;
+
+    wire nedge_write = prev_write & ~write;
 
     // Update command state based on write signals
     always @(write) begin
+         if (nedge_write)
+            command_state = next_command_state;
         if (write_initial_command_word_1 == 1'b1)
             next_command_state = WRITE_ICW2;
         else if (write_initial_command_word_2_4 == 1'b1) begin
@@ -145,7 +153,7 @@ module Control_Logic_8259 (
             endcase
         end
 
-        command_state = next_command_state;
+        prev_write = write;
     end
 
 
@@ -158,8 +166,8 @@ module Control_Logic_8259 (
     wire    write_operation_control_word_3_registers = (command_state == CMD_READY) & write_operation_control_word_3;
 
     // Control state variables
-    reg next_control_state; // Next state of the control state machine
-    reg control_state; // Current state of the control state machine
+    reg [2:0] next_control_state; // Next state of the control state machine
+    reg [2:0] control_state; // Current state of the control state machine
 
     reg prev_interrupt_acknowledge_n; // Previous value of the interrupt_acknowledge_n signal
     reg prev_read_signal; // Previous value of the read signal
