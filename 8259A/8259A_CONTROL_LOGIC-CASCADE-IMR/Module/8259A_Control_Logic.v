@@ -19,6 +19,7 @@
 `include "OperationControlWord1.v"
 `include "OperationControlWord2.v"
 `include "OperationControlWord3.v"
+`include "AcknowledgeModule.v"
 
 module Control_Logic_8259 (
     // External input/output
@@ -26,7 +27,7 @@ module Control_Logic_8259 (
     inout wire slave_program_or_enable_buffer,
 
     input wire interrupt_acknowledge_n,
-    output reg interrupt_to_cpu,
+    output wire interrupt_to_cpu,
 
     // Internal bus
     input wire [7:0] internal_data_bus,
@@ -38,32 +39,35 @@ module Control_Logic_8259 (
     input wire read,
     input wire write,
 
-    output reg out_control_logic_data,
-    output reg [7:0] control_logic_data,
+    output wire out_control_logic_data,
+    output wire [7:0] control_logic_data,
 
     // Registers to interrupt detecting logics
-    output reg level_or_edge_toriggered_config,
-    output reg special_fully_nest_config,
+    output wire level_or_edge_toriggered_config,
+    output wire special_fully_nest_config,
 
     // Registers to Read logics
-    output reg enable_read_register,
-    output reg read_register_isr_or_irr,
+    output wire enable_read_register,
+    output wire read_register_isr_or_irr,
 
     // Signals from interrupt detectiong logics
     input wire [7:0] interrupt,
     input wire [7:0] highest_level_in_service,
 
     // Interrupt control signals
-    output reg [7:0] interrupt_mask,
-    output reg [7:0] interrupt_special_mask,
-    output reg [7:0] end_of_interrupt,
-    output reg [2:0] priority_rotate,
-    output reg freeze,
-    output reg latch_in_service,
-    output reg [7:0] clear_interrupt_request
-);
+    output wire [7:0] interrupt_mask,
+    output wire [7:0] interrupt_special_mask,
 
-    `include "AcknowledgeModule.v"
+    output wire [7:0] end_of_interrupt,
+
+    output wire [2:0] priority_rotate,
+    
+    output wire freeze,
+    output reg latch_in_service,
+    output wire [7:0] clear_interrupt_request
+);
+    `include "Internal_Functions.v"
+
 
     // State
     // Define parameters for command states
@@ -78,12 +82,11 @@ module Control_Logic_8259 (
     localparam ACK2 = 3'b010;
     localparam ACK3 = 3'b011;
     localparam POLL = 3'b100;
-    localparam FINISH_CYCLE = 3'b101; 
 
     //
     // Cascade
     //
-    reg   [2:0]   cascade_out;
+    wire [2:0]   cascade_out;
 
     // Cascade slave id
     wire [2:0] cascade_id;
@@ -92,26 +95,33 @@ module Control_Logic_8259 (
     assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
     assign cascade_id = cascade_inout;
 
-    wire slave_program ;
-    // Registers
-    reg   [10:0]  interrupt_vector_address;
-    reg           call_address_interval_4_or_8_config;
-    reg           single_or_cascade_config;
-    reg           set_icw4_config;
-    reg   [7:0]   cascade_device_config;
-    reg           buffered_mode_config;
-    reg           buffered_master_or_slave_config;
-    reg           auto_eoi_config;
-    reg           u8086_or_mcs80_config;
-    reg           special_mask_mode;
-    reg           enable_special_mask_mode;
-    reg           auto_rotate_mode;
-    reg   [7:0]   acknowledge_interrupt;
+    //Wire connections
+    wire slave_program;
+    wire [10:0] interrupt_vector_address;
+    
+    wire u8086_or_mcs80_config;
+    wire auto_rotate_mode;
+    wire call_address_interval_4_or_8_config;
+    wire single_or_cascade_config;
+    wire set_icw4_config;
+    wire special_mask_mode;
 
-    reg           cascade_slave;
-    reg           cascade_slave_enable;
-    reg           cascade_output_ack_2_3;
-    reg [7:0] interrupt_when_ack1;
+    wire buffered_master_or_slave_config;
+    wire buffered_mode_config;
+
+    wire auto_eoi_config;
+
+    wire cascade_slave;
+    wire cascade_slave_enable;
+    wire cascade_output_ack_2_3;
+
+    wire [7:0] acknowledge_interrupt;
+    wire [7:0] interrupt_when_ack1;
+
+    // Registers
+    reg   [7:0]   cascade_device_config;
+    reg           enable_special_mask_mode;
+
     // Command state machine
     reg [1:0] command_state;
     reg [1:0] next_command_state;
@@ -207,14 +217,14 @@ module Control_Logic_8259 (
                     next_control_state = ACK3;
                 end
                 else begin
-                    next_control_state = FINISH_CYCLE;
+                    next_control_state = CTL_READY;
                 end
             end
             ACK3: begin
                 if (~pedge_interrupt_acknowledge)
                     next_control_state = ACK3;
                 else begin
-                    next_control_state = FINISH_CYCLE;
+                    next_control_state = CTL_READY;
                 end
             end
             POLL: begin
@@ -223,9 +233,6 @@ module Control_Logic_8259 (
                 else begin
                     next_control_state = CTL_READY;
                 end
-            end
-            FINISH_CYCLE: begin
-                next_control_state = CTL_READY;
             end
             default: begin
                 next_control_state = CTL_READY;
@@ -264,26 +271,16 @@ module Control_Logic_8259 (
     // error 1 <-------------------------
      InitializationCommandWord1 initializationCommandWordInstance(
         .write_initial_command_word_1(write_initial_command_word_1),
+        .write_initial_command_word_2(write_initial_command_word_2),
+
         .internal_data_bus(internal_data_bus),
-        .interrupt_vector_address(interrupt_vector_address[2:0]),
+
+        .interrupt_vector_address(interrupt_vector_address),
         .level_or_edge_triggered_config(level_or_edge_toriggered_config),
         .call_address_interval_4_or_8_config(call_address_interval_4_or_8_config),
         .single_or_cascade_config(single_or_cascade_config),
         .set_icw4_config(set_icw4_config)
     );
-    //
-    // Initialization command word 2
-    //
-
-    // A15-A8 (MCS-80) or T7-T3 (8086, 8088)
-    always @* begin
-        if (write_initial_command_word_1 == 1'b1)
-            interrupt_vector_address[10:3] <= 3'b000;
-        else if (write_initial_command_word_2 == 1'b1)
-            interrupt_vector_address[10:3] <= internal_data_bus;
-        else
-            interrupt_vector_address[10:3] <= interrupt_vector_address[10:3];
-    end
 
     //
     // Initialization command word 3
@@ -306,7 +303,9 @@ module Control_Logic_8259 (
      InitializationCommandWord4 initializationCommandWord4Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_initial_command_word_4(write_initial_command_word_4),
+        
         .internal_data_bus(internal_data_bus[4:0]),
+        
         .special_fully_nest_config(special_fully_nest_config),
         .buffered_mode_config(buffered_mode_config),
         .slave_program(slave_program),
@@ -323,7 +322,9 @@ module Control_Logic_8259 (
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_operation_control_word_1_registers(write_operation_control_word_1_registers),
         .special_mask_mode(special_mask_mode),
+        
         .internal_data_bus(internal_data_bus[7:0]),
+        
         .interrupt_mask(interrupt_mask[7:0]),
         .interrupt_special_mask(interrupt_special_mask[7:0])
     );
@@ -340,6 +341,7 @@ module Control_Logic_8259 (
         .write_operation_control_word_2(write_operation_control_word_2),
         .internal_data_bus(internal_data_bus),
         .highest_level_in_service(highest_level_in_service),
+        
         .end_of_interrupt(end_of_interrupt),
         .auto_rotate_mode(auto_rotate_mode),
         .priority_rotate(priority_rotate)
@@ -352,7 +354,9 @@ module Control_Logic_8259 (
       OperationControlWord3 operationControlWord3Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_operation_control_word_3_registers(write_operation_control_word_3_registers),
+        
         .internal_data_bus(internal_data_bus),
+        
         .special_mask_mode(special_mask_mode),
         .enable_read_register(enable_read_register),
         .read_register_isr_or_irr(read_register_isr_or_irr)
@@ -371,6 +375,7 @@ module Control_Logic_8259 (
         .cascade_id(cascade_id),
         .acknowledge_interrupt(acknowledge_interrupt),
         .control_state(control_state),
+        
         .cascade_slave(cascade_slave),
         .cascade_io(cascade_io),
         .cascade_slave_enable(cascade_slave_enable),
@@ -390,6 +395,7 @@ module Control_Logic_8259 (
         .next_control_state(next_control_state),
         .latch_in_service(latch_in_service),
         .control_state(control_state),
+        
         .interrupt_to_cpu(interrupt_to_cpu),
         .freeze(freeze),
         .clear_interrupt_request(clear_interrupt_request),
@@ -411,6 +417,7 @@ module Control_Logic_8259 (
         .call_address_interval_4_or_8_config(call_address_interval_4_or_8_config),
         .interrupt_vector_address(interrupt_vector_address),
         .read(read),
+        
         .out_control_logic_data(out_control_logic_data),
         .control_logic_data(control_logic_data)
     );

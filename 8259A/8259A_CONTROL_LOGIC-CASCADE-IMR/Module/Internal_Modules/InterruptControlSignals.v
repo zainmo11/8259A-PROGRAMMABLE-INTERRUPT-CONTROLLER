@@ -20,9 +20,13 @@ module InterruptControlSignals(
     input [7:0] interrupt, // Input signal representing the interrupt request lines.
     input end_of_acknowledge_sequence, // Input signal indicating the end of the acknowledge sequence.
     input end_of_poll_command, // Input signal indicating the end of the poll command.
-    input next_control_state, // Input signal representing the next control state.
+    
+    input [2:0]next_control_state, // Input signal representing the next control state.
+    
     input latch_in_service, // Input signal indicating whether the interrupt is being serviced.
-    input control_state, // Input signal representing the current control state.
+    
+    input [2:0] control_state, // Input signal representing the current control state.
+    
     output reg interrupt_to_cpu, // Output signal indicating whether an interrupt is to be sent to the CPU.
     output reg freeze, // Output signal indicating whether the interrupt controller is frozen.
     output reg [7:0] clear_interrupt_request, // Output signal representing the interrupt request lines to be cleared.

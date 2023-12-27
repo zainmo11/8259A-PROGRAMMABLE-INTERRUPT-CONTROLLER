@@ -19,7 +19,9 @@ module OperationControlWord1(
     input write_initial_command_word_1, // Input signal to write initial command word 1
     input write_operation_control_word_1_registers, // Input signal to write operation control word 1 registers
     input special_mask_mode, // Input signal for special mask mode
+    
     input [7:0] internal_data_bus, // Input bus for internal data
+    
     output reg [7:0] interrupt_mask, // Output signal for interrupt mask
     output reg [7:0] interrupt_special_mask // Output signal for interrupt special mask
 );

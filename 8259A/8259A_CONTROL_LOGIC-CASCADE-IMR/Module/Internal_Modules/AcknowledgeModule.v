@@ -26,6 +26,7 @@ module AcknowledgeModule(
     input call_address_interval_4_or_8_config,
     input [10:0] interrupt_vector_address,
     input read,
+    
     output reg out_control_logic_data,
     output reg [7:0] control_logic_data
 );

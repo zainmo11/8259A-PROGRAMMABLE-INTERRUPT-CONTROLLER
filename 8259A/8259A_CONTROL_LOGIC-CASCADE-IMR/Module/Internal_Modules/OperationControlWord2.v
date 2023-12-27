@@ -27,6 +27,7 @@ module OperationControlWord2(
     input write_operation_control_word_2, // Input signal to write the operation control word 2.
     input [7:0] internal_data_bus, // Input bus for internal data.
     input [7:0] highest_level_in_service, // Input signal representing the highest level in service.
+    
     output reg [7:0] end_of_interrupt, // Output signal representing the end of interrupt.
     output reg auto_rotate_mode, // Output signal indicating the auto rotate mode.
     output reg [2:0] priority_rotate // Output signal representing the priority rotate value.

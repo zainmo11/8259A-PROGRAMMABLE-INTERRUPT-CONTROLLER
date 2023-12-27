@@ -14,7 +14,10 @@
 
 module InitializationCommandWord1(
     input write_initial_command_word_1,
+    input write_initial_command_word_2,
+
     input [7:0] internal_data_bus,
+    
     output reg [10:0] interrupt_vector_address,
     output reg level_or_edge_triggered_config,
     output reg call_address_interval_4_or_8_config,
@@ -24,9 +27,23 @@ module InitializationCommandWord1(
 
     always @* begin
         if (write_initial_command_word_1 == 1'b1)
-            interrupt_vector_address <= internal_data_bus[7:5];
+            interrupt_vector_address[2:0] <= internal_data_bus[7:5];
         else
-            interrupt_vector_address <= interrupt_vector_address; // Keep the value unchanged
+            interrupt_vector_address[2:0] <= interrupt_vector_address; // Keep the value unchanged
+    end
+
+    //
+    // Initialization command word 2
+    //
+
+    // A15-A8 (MCS-80) or T7-T3 (8086, 8088)
+    always @* begin
+        if (write_initial_command_word_1 == 1'b1)
+            interrupt_vector_address[10:3] <= 3'b000;
+        else if (write_initial_command_word_2 == 1'b1)
+            interrupt_vector_address[10:3] <= internal_data_bus;
+        else
+            interrupt_vector_address[10:3] <= interrupt_vector_address[10:3];
     end
 
     always @* begin

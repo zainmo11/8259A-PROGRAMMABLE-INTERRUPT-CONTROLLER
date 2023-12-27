@@ -19,7 +19,7 @@ module Control_Logic_8259A_tb();
     reg out_control_logic_data;
     reg [7:0] control_logic_data;
     reg interrupt_to_cpu;
-    reg level_or_edge_triggered_config;
+    reg level_or_edge_toriggered_config;
     reg special_fully_nest_config;
     reg enable_read_register;
     reg read_register_isr_or_irr;

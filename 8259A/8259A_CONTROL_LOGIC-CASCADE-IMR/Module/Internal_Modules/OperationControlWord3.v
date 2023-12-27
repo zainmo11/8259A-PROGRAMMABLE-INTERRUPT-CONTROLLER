@@ -14,7 +14,9 @@
 module OperationControlWord3(
     input write_initial_command_word_1, // Input signal to write the initial command word 1.
     input write_operation_control_word_3_registers, // Input signal to write the operation control word 3 registers.
+    
     input [7:0] internal_data_bus, // Input bus for internal data.
+    
     output reg special_mask_mode, // Output signal indicating the special mask mode.
     output reg enable_read_register, // Output signal indicating whether to enable reading the register.
     output reg read_register_isr_or_irr // Output signal indicating whether to read the register for ISR or IRR.
