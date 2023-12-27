@@ -34,7 +34,6 @@ module CascadeSignals(
     output reg cascade_slave, // Output signal indicating whether the device is a cascade slave.
     output wire cascade_io, // Output signal indicating the cascade port I/O.
     output reg cascade_slave_enable, // Output signal indicating whether the cascade slave is enabled.
-    output wire interrupt_from_slave_device, // Output signal indicating an interrupt from the slave device.
     output reg cascade_output_ack_2_3, // Output signal indicating the output ACK2 and ACK3.
     output reg [2:0] cascade_out // Output signal indicating the slave ID.
 );

@@ -10,7 +10,7 @@ module ICWM1_tb ();
     reg single_or_cascade_config;
     reg set_icw4_config;
 
-    InitializationCommandWordModule1 ICWM1 (.*);
+    InitializationCommandWord1 ICWM1 (.*);
 
     task TASK_INIT();
     begin

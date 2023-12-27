@@ -92,7 +92,7 @@ module Control_Logic_8259 (
     assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
     assign cascade_id = cascade_inout;
 
-
+    wire slave_program ;
     // Registers
     reg   [10:0]  interrupt_vector_address;
     reg           call_address_interval_4_or_8_config;
@@ -111,10 +111,16 @@ module Control_Logic_8259 (
     reg           cascade_slave;
     reg           cascade_slave_enable;
     reg           cascade_output_ack_2_3;
-
+    reg [7:0] interrupt_when_ack1;
     // Command state machine
     reg [1:0] command_state;
     reg [1:0] next_command_state;
+
+    reg prev_write;
+
+    initial command_state = 0;
+
+    wire nedge_write = prev_write & ~write;
 
     reg prev_write;
 
@@ -261,12 +267,11 @@ module Control_Logic_8259 (
     //
     // Initialization command word 1
     //
-
-
-     InitializationCommandWordModule initializationCommandWordInstance(
+    // error 1 <-------------------------
+     InitializationCommandWord1 initializationCommandWordInstance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .internal_data_bus(internal_data_bus),
-        .interrupt_vector_address(interrupt_vector_address),
+        .interrupt_vector_address(interrupt_vector_address[2:0]),
         .level_or_edge_triggered_config(level_or_edge_toriggered_config),
         .call_address_interval_4_or_8_config(call_address_interval_4_or_8_config),
         .single_or_cascade_config(single_or_cascade_config),
@@ -310,8 +315,7 @@ module Control_Logic_8259 (
      InitializationCommandWord4 initializationCommandWord4Instance(
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_initial_command_word_4(write_initial_command_word_4),
-        .internal_data_bus(internal_data_bus),
-        .slave_program_or_enable_buffer(slave_program_or_enable_buffer),
+        .internal_data_bus(internal_data_bus[4:0]),
         .special_fully_nest_config(special_fully_nest_config),
         .buffered_mode_config(buffered_mode_config),
         .slave_program(slave_program),
@@ -328,9 +332,9 @@ module Control_Logic_8259 (
         .write_initial_command_word_1(write_initial_command_word_1),
         .write_operation_control_word_1_registers(write_operation_control_word_1_registers),
         .special_mask_mode(special_mask_mode),
-        .internal_data_bus(internal_data_bus),
-        .interrupt_mask(interrupt_mask),
-        .interrupt_special_mask(interrupt_special_mask)
+        .internal_data_bus(internal_data_bus[7:0]),
+        .interrupt_mask(interrupt_mask[7:0]),
+        .interrupt_special_mask(interrupt_special_mask[7:0])
     );
 
     //
@@ -379,7 +383,6 @@ module Control_Logic_8259 (
         .cascade_slave(cascade_slave),
         .cascade_io(cascade_io),
         .cascade_slave_enable(cascade_slave_enable),
-        .interrupt_from_slave_device(interrupt_from_slave_device),
         .cascade_output_ack_2_3(cascade_output_ack_2_3),
         .cascade_out(cascade_out)
     );
