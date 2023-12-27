@@ -122,12 +122,6 @@ module Control_Logic_8259 (
 
     wire nedge_write = prev_write & ~write;
 
-    reg prev_write;
-
-    initial command_state = 0;
-
-    wire nedge_write = prev_write & ~write;
-
     // DONE - State machine
     always @(write) begin
         if (nedge_write)
@@ -277,9 +271,6 @@ module Control_Logic_8259 (
         .single_or_cascade_config(single_or_cascade_config),
         .set_icw4_config(set_icw4_config)
     );
-
-    interrupt_vector_address = 
-
     //
     // Initialization command word 2
     //
