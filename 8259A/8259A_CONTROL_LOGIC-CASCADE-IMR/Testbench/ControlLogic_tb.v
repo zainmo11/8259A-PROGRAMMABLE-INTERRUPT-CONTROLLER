@@ -103,7 +103,7 @@ module Control_Logic_8259A_tb();
         #100
 
         // Interrupt
-        interrupt = 8'b00000001;
+        interrupt = 8'b00000010;
         #100
 
         interrupt_acknowledge_n = 0;
@@ -325,7 +325,7 @@ module Control_Logic_8259A_tb();
         #100
 
         // Interrupt
-        interrupt = 8'b00000001;
+        interrupt = 8'b00000010;
         #100
 
         interrupt_acknowledge_n = 0;
@@ -404,10 +404,7 @@ module Control_Logic_8259A_tb();
         interrupt_acknowledge_n = 0;
         #100
         interrupt_acknowledge_n = 1;
-        #100
-        interrupt_acknowledge_n = 0;
-        #100
-        interrupt_acknowledge_n = 1;
+
     end 
     endtask
 

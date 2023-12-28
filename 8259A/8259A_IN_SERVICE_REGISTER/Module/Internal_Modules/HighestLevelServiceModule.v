@@ -1,7 +1,7 @@
 module HighestLevelServiceModule(
     input [7:0] next_in_service_register,          // Input: Next in-service register
     input [7:0] interrupt_special_mask,            // Input: Interrupt special mask
-    input [7:0] priority_rotate,                    // Input: Priority rotate
+    input [2:0] priority_rotate,                    // Input: Priority rotate
     output reg [7:0] highest_level_in_service       // Output: Highest level in-service
 );
 

@@ -26,7 +26,7 @@ module Priority_Resolver_8259A (
 );
 
     `include "Internal_Functions.v"
-    `include "Internal_Modules/PriorityMaskModule.v"
+    `include "PriorityMaskModule.v"
 
     wire   [7:0]   masked_interrupt_request;
     wire   [7:0]   masked_in_service;
@@ -34,7 +34,8 @@ module Priority_Resolver_8259A (
     wire   [7:0]   rotated_highest_level_in_service;
     wire   [7:0]   rotated_interrupt;
     reg    [7:0]   rotated_in_service;
-    reg    [7:0]   priority_mask;
+    
+    wire    [7:0]   priority_mask;
 
     // Apply interrupt mask to interrupt request register
     assign masked_interrupt_request = interrupt_request_register & ~interrupt_mask;
@@ -59,13 +60,11 @@ module Priority_Resolver_8259A (
     end
 
     // Instantiate PriorityMaskModule to calculate priority mask
-    always @(*) begin
-        PriorityMaskModule priorityMaskInstance(
+    PriorityMaskModule priorityMaskInstance(
             .rotated_in_service(rotated_in_service),
             .priority_mask(priority_mask)
-        );
-    end
-
+    );
+    
     // Resolve highest priority interrupt based on rotated request and priority mask
     assign rotated_interrupt = resolv_priority(rotated_request) & priority_mask;
 

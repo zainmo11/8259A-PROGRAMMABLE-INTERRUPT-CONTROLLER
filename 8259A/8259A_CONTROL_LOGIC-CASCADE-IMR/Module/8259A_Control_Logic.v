@@ -95,8 +95,10 @@ module Control_Logic_8259 (
     assign cascade_inout = ~cascade_io ? cascade_out : 3'bz;
     assign cascade_id = cascade_inout;
 
+
     //Wire connections
     wire slave_program;
+    
     wire [10:0] interrupt_vector_address;
     
     wire u8086_or_mcs80_config;
@@ -117,6 +119,9 @@ module Control_Logic_8259 (
 
     wire [7:0] acknowledge_interrupt;
     wire [7:0] interrupt_when_ack1;
+
+    assign  slave_program_or_enable_buffer = buffered_mode_config ? ~buffered_mode_config : 1'bz;
+    assign slave_program = slave_program_or_enable_buffer;
 
     // Registers
     reg   [7:0]   cascade_device_config;

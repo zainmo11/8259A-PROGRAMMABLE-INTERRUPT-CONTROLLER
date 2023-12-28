@@ -14,6 +14,9 @@
  * - highest_level_in_service: 8-bit output representing the highest level interrupt in the in-service register.
  */
 
+ `include "HighestLevelServiceModule.v"   // Include highest level service module
+
+
 module In_Service_8259A (
     input   [2:0]   priority_rotate,                // Priority rotation value
     input   [7:0]   interrupt_special_mask,         // Interrupt special mask
@@ -21,11 +24,11 @@ module In_Service_8259A (
     input            latch_in_service,              // Latch interrupt signals into the in-service register
     input   [7:0]   end_of_interrupt,               // End of interrupt signals
     output  reg [7:0]   in_service_register,         // In-service register
-    output  reg [7:0]   highest_level_in_service     // Highest level interrupt in the in-service register
+    
+    output  wire [7:0]   highest_level_in_service     // Highest level interrupt in the in-service register
 );
 
     `include "Internal_Functions.v"                      // Include Internal_Functions
-    `include "Internal_Modules/HighestLevelServiceModule.v"   // Include highest level service module
 
     wire   [7:0]   next_in_service_register;         // Wire for the next in-service register value
 
@@ -38,15 +41,14 @@ module In_Service_8259A (
                                      | (latch_in_service == 1'b1 ? interrupt : 8'b00000000);
 
     // Instantiate the HighestLevelServiceModule to determine the highest level interrupt in the in-service register
-    always @* begin
-        HighestLevelServiceModule highestLevelServiceInstance(
-            .next_in_service_register(next_in_service_register),
-            .interrupt_special_mask(interrupt_special_mask),
-            .priority_rotate(priority_rotate),
-            .highest_level_in_service(highest_level_in_service)
-        );
-    end
+    HighestLevelServiceModule highestLevelServiceInstance(
+        .next_in_service_register(next_in_service_register),
+        .interrupt_special_mask(interrupt_special_mask),
+        .priority_rotate(priority_rotate),
+        .highest_level_in_service(highest_level_in_service)
+    );
 
-    in_service_register <= next_in_service_register;  // Update the in-service register
+    always @*
+        in_service_register <= next_in_service_register;  // Update the in-service register
 
 endmodule
