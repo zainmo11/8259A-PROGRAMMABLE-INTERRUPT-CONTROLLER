@@ -14,7 +14,7 @@
  * - highest_level_in_service: 8-bit output representing the highest level interrupt in the in-service register.
  */
 
- `include "HighestLevelServiceModule.v"   // Include highest level service module
+ `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_IN_SERVICE_REGISTER\\Module\\Internal_Modules\\HighestLevelServiceModule.v"   // Include highest level service module
 
 
 module In_Service_8259A (
@@ -28,7 +28,7 @@ module In_Service_8259A (
     output  wire [7:0]   highest_level_in_service     // Highest level interrupt in the in-service register
 );
 
-    `include "Internal_Functions.v"                      // Include Internal_Functions
+    `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_IN_SERVICE_REGISTER\\Module\\Internal_Modules\\Internal_Functions.v"                      // Include Internal_Functions
 
     wire   [7:0]   next_in_service_register;         // Wire for the next in-service register value
 

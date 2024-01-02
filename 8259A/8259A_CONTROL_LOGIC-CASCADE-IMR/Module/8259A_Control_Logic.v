@@ -12,14 +12,14 @@
  * and initialization command words.
  */
 
-`include "CascadeSignals.v"
-`include "initializationCommandWord4.v"
-`include "InitializationCommandWordModule1.v"
-`include "InterruptControlSignals.v"
-`include "OperationControlWord1.v"
-`include "OperationControlWord2.v"
-`include "OperationControlWord3.v"
-`include "AcknowledgeModule.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_Cascade\\module\\CascadeSignals.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\initializationCommandWord4.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\InitializationCommandWordModule1.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\InterruptControlSignals.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\OperationControlWord1.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\OperationControlWord2.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\OperationControlWord3.v"
+`include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\AcknowledgeModule.v"
 
 module Control_Logic_8259 (
     // External input/output
@@ -66,7 +66,7 @@ module Control_Logic_8259 (
     output reg latch_in_service,
     output wire [7:0] clear_interrupt_request
 );
-    `include "Internal_Functions.v"
+    `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\Internal_Functions.v"
 
 
     // State
