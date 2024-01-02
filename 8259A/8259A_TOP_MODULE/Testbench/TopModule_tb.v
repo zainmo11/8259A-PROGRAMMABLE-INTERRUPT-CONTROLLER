@@ -1,52 +1,69 @@
-`define TB_CYCLE 20
 
-module ControlLogic_tb();
+`define TB_CYCLE        20
+`define TB_FINISH_COUNT 20000
 
-    reg   [2:0]   cascade_inout;
-    reg           slave_program_or_enable_buffer;
+module TopModule_8259A_tb();
+
+    `timescale 1ns/10ps
+
+    //
+    // Module under test
+    //
+    reg           chip_select_n;
+    reg           read_enable_n;
+    reg           write_enable_n;
+    reg           address;
+
+    reg   [7:0]   interrupt_request;
+
+    // Inout
+    wire   [7:0]   data_bus;
+    reg            data_bus_tri;
+    reg    [7:0]   data_bus_write;
+    wire   [7:0]   data_bus_read;
+
+    wire   [2:0]   cascade_inout;
+    reg            cascade_inout_tri;
+    reg    [2:0]   cascade_inout_write;
+    wire   [2:0]   cascade_inout_read;
+
+
+    wire           slave_program_or_enable_buffer;
+    reg            slave_program_or_enable_buffer_tri;
+    reg            slave_program_or_enable_buffer_write;
+    wire           slave_program_or_enable_buffer_read;
+
+
+
     reg           interrupt_acknowledge_n;
-    reg   [7:0]   internal_data_bus;
-    reg           write_initial_command_word_1;
-    reg           write_initial_command_word_2_4;
-    reg           write_operation_control_word_1;
-    reg           write_operation_control_word_2;
-    reg           write_operation_control_word_3;
-    reg           read;
-    reg           write;
-    reg   [7:0]   interrupt;
-    reg   [7:0]   highest_level_in_service;
-    reg           slave_program_n;
 
-    reg           out_control_logic_data;
-    reg   [7:0]   control_logic_data;
     reg           interrupt_to_cpu;
-    reg           level_or_edge_toriggered_config;
-    reg           special_fully_nest_config;
-    reg           enable_read_register;
-    reg           read_register_isr_or_irr;
-    reg   [7:0]   interrupt_mask;
-    reg   [7:0]   interrupt_special_mask;
-    reg   [7:0]   end_of_interrupt;
-    reg   [2:0]   priority_rotate;
-    reg           freeze;
-    reg           latch_in_service;
-    reg   [7:0]   clear_interrupt_request;
 
-    KF8259_Control_Logic u_KF8259_Control_Logic (.*);
-
+    TopModule_8259A u_TopModule_8259A (.*);
+    assign data_bus = data_bus_tri ? 8'bzzzzzzzz : data_bus_write;
+    assign data_bus_read = data_bus;
+    assign cascade_inout = cascade_inout_tri ? 8'bzzzzzzzz : cascade_inout_write;
+    assign cascade_inout_read = cascade_inout;
+    assign slave_program_or_enable_buffer = slave_program_or_enable_buffer_tri ? 1'bz : slave_program_or_enable_buffer_write;
+    assign slave_program_or_enable_buffer_read = slave_program_or_enable_buffer;
     //
     // Task : Initialization
     //
     task TASK_INIT();
     begin
         #(`TB_CYCLE * 0);
-        read                    = 1'b1;
-        write                   = 1'b1;
-        internal_data_bus       = 8'b00000000;
-        cascade_inout              = 3'b000;
-        slave_program_or_enable_buffer         = 1'b0;
+        chip_select_n           = 1'b1;
+        read_enable_n           = 1'b1;
+        write_enable_n          = 1'b1;
+        address                 = 1'b0;
+        data_bus_tri = 0;
+        data_bus_write             = 8'b00000000;
+        cascade_inout_tri = 0;
+        cascade_inout_write              = 3'b000;
+        slave_program_or_enable_buffer_tri = 0;
+        slave_program_or_enable_buffer_write              = 3'b000;
         interrupt_acknowledge_n = 1'b1;
-        interrupt       = 8'b00000000;
+        interrupt_request       = 8'b00000000;
         #(`TB_CYCLE * 12);
     end
     endtask
@@ -57,11 +74,17 @@ module ControlLogic_tb();
     task TASK_WRITE_DATA(input addr, input [7:0] data);
     begin
         #(`TB_CYCLE * 0);
-        write           = 1'b0;
-        internal_data_bus  = data;
+        chip_select_n   = 1'b0;
+        write_enable_n  = 1'b0;
+        address         = addr;
+        data_bus_tri = 0;
+        data_bus_write     = data;
         #(`TB_CYCLE * 1);
-        write           = 1'b1;
-        internal_data_bus  = 8'b00000000;
+        chip_select_n   = 1'b1;
+        write_enable_n  = 1'b1;
+        address         = 1'b0;
+        data_bus_tri = 1;
+        // data_bus     = 8'b00000000;
         #(`TB_CYCLE * 1);
     end
     endtask
@@ -72,9 +95,13 @@ module ControlLogic_tb();
     task TASK_READ_DATA(input addr);
     begin
         #(`TB_CYCLE * 0);
-        read            = 1'b0;
+        data_bus_tri = 1;
+        chip_select_n   = 1'b0;
+        read_enable_n   = 1'b0;
+        address         = addr;
         #(`TB_CYCLE * 1);
-        read            = 1'b1;
+        chip_select_n   = 1'b1;
+        read_enable_n   = 1'b1;
         #(`TB_CYCLE * 1);
     end
     endtask
@@ -85,9 +112,9 @@ module ControlLogic_tb();
     task TASK_INTERRUPT_REQUEST(input [7:0] request);
     begin
         #(`TB_CYCLE * 0);
-        interrupt = request;
+        interrupt_request = request;
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
     end
     endtask
 
@@ -138,11 +165,12 @@ module ControlLogic_tb();
     begin
         #(`TB_CYCLE * 0);
         interrupt_acknowledge_n = 1'b1;
-        cascade_inout = 3'b000;
+        cascade_inout_tri = 0;
+        cascade_inout_write = 3'b000;
         #(`TB_CYCLE * 1);
         interrupt_acknowledge_n = 1'b0;
         #(`TB_CYCLE / 2);
-        cascade_inout = slave_id;
+        cascade_inout_write = slave_id;
         #(`TB_CYCLE / 2);
         interrupt_acknowledge_n = 1'b1;
         #(`TB_CYCLE * 1);
@@ -153,7 +181,8 @@ module ControlLogic_tb();
         interrupt_acknowledge_n = 1'b0;
         #(`TB_CYCLE * 1);
         interrupt_acknowledge_n = 1'b1;
-        cascade_inout = 3'b000;
+        cascade_inout_write = 3'b000;
+        cascade_inout_tri = 1;
     end
     endtask
 
@@ -182,18 +211,20 @@ module ControlLogic_tb();
     begin
         #(`TB_CYCLE * 0);
         interrupt_acknowledge_n = 1'b1;
-        cascade_inout = 3'b000;
+        cascade_inout_tri = 0;
+        cascade_inout_write = 3'b000;
         #(`TB_CYCLE * 1);
         interrupt_acknowledge_n = 1'b0;
         #(`TB_CYCLE / 2);
-        cascade_inout = slave_id;
+        cascade_inout_write = slave_id;
         #(`TB_CYCLE / 2);
         interrupt_acknowledge_n = 1'b1;
         #(`TB_CYCLE * 1);
         interrupt_acknowledge_n = 1'b0;
         #(`TB_CYCLE * 1);
         interrupt_acknowledge_n = 1'b1;
-        cascade_inout = 3'b000;
+        cascade_inout_write = 3'b000;
+        cascade_inout_tri = 1;
     end
     endtask
 
@@ -204,7 +235,8 @@ module ControlLogic_tb();
     //
     task TASK_MCS80_NORMAL_INTERRUPT_TEST();
     begin
-        #(`TB_CYCLE * 0);        // ICW1
+        #(`TB_CYCLE * 0);
+        // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
         TASK_WRITE_DATA(1'b1, 8'b00000000);
@@ -247,6 +279,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b10000000);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b111);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00111111);
         // ICW2
@@ -262,6 +295,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b01011111);
         // ICW2
@@ -277,6 +311,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b10011111);
         // ICW2
@@ -292,6 +327,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -307,6 +343,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -322,6 +359,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -337,6 +375,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -352,6 +391,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -367,6 +407,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -382,6 +423,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -397,6 +439,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -412,6 +455,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         #(`TB_CYCLE * 0);
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
@@ -457,6 +501,7 @@ module ControlLogic_tb();
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b111);
         #(`TB_CYCLE * 1);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b01011011);
         // ICW2
@@ -472,6 +517,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b10011011);
         // ICW2
@@ -487,6 +533,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -502,6 +549,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -517,6 +565,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -532,6 +581,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -547,6 +597,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -562,6 +613,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -577,6 +629,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -592,6 +645,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011011);
         // ICW2
@@ -616,7 +670,8 @@ module ControlLogic_tb();
     //
     task TASK_8086_NORMAL_INTERRUPT_TEST();
     begin
-        #(`TB_CYCLE * 0);        // ICW1
+        #(`TB_CYCLE * 0);
+        // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
         TASK_WRITE_DATA(1'b1, 8'b00000000);
@@ -659,6 +714,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b10000000);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b111);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -674,6 +730,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -689,6 +746,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -704,6 +762,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -719,6 +778,7 @@ module ControlLogic_tb();
         TASK_INTERRUPT_REQUEST(8'b00000001);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011111);
         // ICW2
@@ -755,75 +815,75 @@ module ControlLogic_tb();
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001000);
 
-        interrupt = 8'b00000001;
+        interrupt_request = 8'b00000001;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
 
-        interrupt = 8'b00000010;
+        interrupt_request = 8'b00000010;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b001);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b001);
 
-        interrupt = 8'b00000100;
+        interrupt_request = 8'b00000100;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b010);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b010);
 
-        interrupt = 8'b00001000;
+        interrupt_request = 8'b00001000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b011);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b011);
 
-        interrupt = 8'b00010000;
+        interrupt_request = 8'b00010000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b100);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b100);
 
-        interrupt = 8'b00100000;
+        interrupt_request = 8'b00100000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b101);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b101);
 
-        interrupt = 8'b01000000;
+        interrupt_request = 8'b01000000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b110);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b110);
 
-        interrupt = 8'b10000000;
+        interrupt_request = 8'b10000000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b111);
         #(`TB_CYCLE * 1);
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b111);
         #(`TB_CYCLE * 12);
@@ -847,55 +907,55 @@ module ControlLogic_tb();
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001000);
 
-        interrupt = 8'b00000001;
+        interrupt_request = 8'b00000001;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b000);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00000010;
+        interrupt_request = 8'b00000010;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b001);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00000100;
+        interrupt_request = 8'b00000100;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b010);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00001000;
+        interrupt_request = 8'b00001000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b011);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00010000;
+        interrupt_request = 8'b00010000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b100);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00100000;
+        interrupt_request = 8'b00100000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b101);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b01000000;
+        interrupt_request = 8'b01000000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b110);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b10000000;
+        interrupt_request = 8'b10000000;
         #(`TB_CYCLE * 1);
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_SPECIFIC_EOI(3'b111);
         #(`TB_CYCLE * 5);
 
-        interrupt = 8'b00000000;
+        interrupt_request = 8'b00000000;
         #(`TB_CYCLE * 12);
     end
     endtask
@@ -1212,6 +1272,7 @@ module ControlLogic_tb();
         TASK_WRITE_DATA(1'b1, 8'b00000000);
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001000);
+
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b11000100);
 
@@ -1241,6 +1302,7 @@ module ControlLogic_tb();
 
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_NON_SPECIFIC_EOI();
+
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b11000111);
 
@@ -1273,6 +1335,7 @@ module ControlLogic_tb();
 
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_NON_SPECIFIC_EOI();
+
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b11000111);
         TASK_WRITE_DATA(1'b0, 8'b10000000);
@@ -1418,6 +1481,7 @@ module ControlLogic_tb();
         TASK_WRITE_DATA(1'b1, 8'b00000000);
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001000);
+
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001010);
         TASK_READ_DATA(1'b0);
@@ -1449,6 +1513,7 @@ module ControlLogic_tb();
 
         TASK_INTERRUPT_REQUEST(8'b10000000);
         TASK_READ_DATA(1'b0);
+
         TASK_WRITE_DATA(1'b0, 8'b00001011);
 
         TASK_READ_DATA(1'b0);
@@ -1495,6 +1560,7 @@ module ControlLogic_tb();
 
         TASK_SEND_NON_SPECIFIC_EOI();
         TASK_READ_DATA(1'b0);
+
         // OCW1
         TASK_WRITE_DATA(1'b1, 8'b00000000);
         TASK_READ_DATA(1'b1);
@@ -1543,7 +1609,8 @@ module ControlLogic_tb();
     //
     task TASK_CASCADE_MODE_TEST();
     begin
-        #(`TB_CYCLE * 0);        // ICW1
+        #(`TB_CYCLE * 0);
+        // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011101);
         // ICW2
         TASK_WRITE_DATA(1'b1, 8'b00000000);
@@ -1582,6 +1649,7 @@ module ControlLogic_tb();
 
         TASK_SEND_ACK_TO_MCS80();
         TASK_SEND_NON_SPECIFIC_EOI();
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011101);
         // ICW2
@@ -1812,6 +1880,7 @@ module ControlLogic_tb();
     task TASK_SLAVE_PROGRAM_TEST();
     begin
         #(`TB_CYCLE * 0);
+
         // ICW1
         TASK_WRITE_DATA(1'b0, 8'b00011101);
         // ICW2
@@ -1825,7 +1894,8 @@ module ControlLogic_tb();
         // OCW3
         TASK_WRITE_DATA(1'b0, 8'b00001000);
 
-        slave_program_or_enable_buffer         = 1'b1;
+        slave_program_or_enable_buffer_tri = 0;
+        slave_program_or_enable_buffer_write = 1;
 
         // interrupt
         TASK_INTERRUPT_REQUEST(8'b11111111);
@@ -1854,7 +1924,7 @@ module ControlLogic_tb();
         TASK_SEND_ACK_TO_8086();
         TASK_SEND_NON_SPECIFIC_EOI();
 
-        slave_program_or_enable_buffer         = 1'b0;
+        slave_program_or_enable_buffer_write = 0;
 
         // interrupt
         TASK_INTERRUPT_REQUEST(8'b10000000);
@@ -1870,6 +1940,7 @@ module ControlLogic_tb();
 
         TASK_SEND_NON_SPECIFIC_EOI();
 
+        slave_program_or_enable_buffer_tri = 1;
         #(`TB_CYCLE * 12);
     end
     endtask
@@ -1879,30 +1950,41 @@ module ControlLogic_tb();
     //
     initial begin
         TASK_INIT();
+
         TASK_MCS80_NORMAL_INTERRUPT_TEST();
+
         TASK_8086_NORMAL_INTERRUPT_TEST();
+
         TASK_LEVEL_TORIGGER_TEST();
+
         TASK_EDGE_TORIGGER_TEST();
+
         TASK_INTERRUPT_MASK_TEST();
+
         TASK_SPECIAL_MASK_TEST();
+
         TASK_AUTO_EOI_TEST();
+
         TASK_NON_SPECTAL_FULLY_NESTED_TEST();
+
         TASK_SPECTAL_FULLY_NESTED_TEST();
+
         TASK_NON_SPECIFIC_EOI_TEST();
+
         TASK_ROTATE_TEST();
+
         TASK_POLL_COMMAND_TEST();
+
         TASK_READING_STATUS_TEST();
+
         TASK_CASCADE_MODE_TEST();
+
         TASK_SLAVE_PROGRAM_TEST();
 
         #(`TB_CYCLE * 1);
         // End of simulation
-`ifdef IVERILOG
-        $finish;
-`elsif  MODELSIM
+
         $stop;
-`else
-        $finish;
-`endif
+
     end
 endmodule

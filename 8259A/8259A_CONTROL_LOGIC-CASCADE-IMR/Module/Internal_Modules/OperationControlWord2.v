@@ -32,7 +32,7 @@ module OperationControlWord2(
     output reg auto_rotate_mode, // Output signal indicating the auto rotate mode.
     output reg [2:0] priority_rotate // Output signal representing the priority rotate value.
 );
-    `include "Internal_Functions.v"
+    `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_CONTROL_LOGIC-CASCADE-IMR\\Module\\Internal_Modules\\Internal_Functions.v"
 
     // End of interrupt
     always @* begin
