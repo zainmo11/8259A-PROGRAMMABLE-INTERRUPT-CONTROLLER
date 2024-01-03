@@ -1,6 +1,5 @@
 # 8259A Programmable Interrupt Controller (PIC) in Verilog
 
-![Profile Views](https://img.shields.io/github/stars/zainmo11/8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER?label=Repo+Views&style=social)
 
 
 ## Overview
