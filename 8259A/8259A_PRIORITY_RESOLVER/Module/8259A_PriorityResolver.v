@@ -25,8 +25,8 @@ module Priority_Resolver_8259A (
     output  wire   [7:0]   interrupt                         // Highest priority interrupt
 );
 
-    `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_PRIORITY_RESOLVER\\Module\\Internal_Modules\\Internal_Functions.v"
-    `include "C:\\Users\\Mahmoud\\Downloads\\CA_fork\\8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER\\8259A\\8259A_PRIORITY_RESOLVER\\Module\\Internal_Modules\\PriorityMaskModule.v"
+    `include "Internal_Functions.v"
+    `include "PriorityMaskModule.v"
 
     wire   [7:0]   masked_interrupt_request;
     wire   [7:0]   masked_in_service;
