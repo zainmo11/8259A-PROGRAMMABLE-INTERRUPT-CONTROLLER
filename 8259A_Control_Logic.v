@@ -1,4 +1,4 @@
-module KF8259_Control_Logic (
+module 8259_Control_Logic (
     // External input/output
     inout   wire   [2:0]   cascade_inout,
 
