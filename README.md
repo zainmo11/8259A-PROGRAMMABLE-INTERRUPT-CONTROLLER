@@ -49,8 +49,6 @@ This Verilog implementation represents the 8259A Programmable Interrupt Controll
 14. **Interrupt Acknowledge Signals:**
     - The PIC generates interrupt acknowledge signals (INTA) for the CPU to identify the source of the interrupt being serviced.
 
-15. **Daisy-Chaining:**
-    - The cascading feature allows multiple 8259A controllers to be connected in a daisy-chain configuration, simplifying the organization of interrupt priorities in large systems.
 
 These features make the 8259A a versatile and widely used component in interrupt handling within computer systems.
 
