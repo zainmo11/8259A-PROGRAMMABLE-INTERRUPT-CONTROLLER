@@ -1,5 +1,8 @@
 # 8259A Programmable Interrupt Controller (PIC) in Verilog
 
+![Profile Views](https://img.shields.io/github/stars/zainmo11/8259A-PROGRAMMABLE-INTERRUPT-CONTROLLER?label=Repo+Views&style=social)
+
+
 ## Overview
 
 This Verilog implementation represents the 8259A Programmable Interrupt Controller (PIC) commonly used in microprocessor-based systems. The design is organized into several main modules, each encapsulating specific functionality, along with their respective internal modules and testbenches.
